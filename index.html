@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Registros Linha Viva</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    padding: 20px;
+  }
+
+  .box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 1200px;
+    margin: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  th {
+    background: #0097CE;
+    color: white;
+  }
+
+  tr:nth-child(even) {
+    background: #f7f7f7;
+  }
+</style>
+</head>
+
+<body>
+<div class="box">
+  <h2>Registros Enviados</h2>
+  <p>A tabela abaixo mostra todos os envios do formulário.</p>
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Equipe</th>
+        <th>Base</th>
+        <th>Componente</th>
+        <th>Serviço</th>
+        <th>Endereço</th>
+        <th>GPS</th>
+        <th>Foto</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev/listar";
+
+async function carregar() {
+  const resp = await fetch(API_URL);
+  const dados = await resp.json();
+
+  const tbody = document.querySelector("#tabela tbody");
+  tbody.innerHTML = "";
+
+  dados.forEach(reg => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${reg.id}</td>
+      <td>${reg.equipe}</td>
+      <td>${reg.base}</td>
+      <td>${reg.componente}</td>
+      <td>${reg.servicoll}</td>
+      <td>${reg.endereco}</td>
+      <td>${reg.gps}</td>
+      <td>${reg.arquivo 
+            ? `<a href="https://withered-hat-347d.pedro-fillype.workers.dev/foto/${reg.arquivo}" target="_blank">Abrir</a>` 
+            : '-'}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+carregar();
+</script>
+
+</body>
+</html>
