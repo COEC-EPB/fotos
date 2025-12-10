@@ -127,6 +127,38 @@
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev/listar";
 let registros = [];
 
+  async function gerarSS(id) {
+  const numero = prompt("Digite o número da SS:");
+
+  if (!numero) {
+    alert("SS não informada.");
+    return;
+  }
+
+  try {
+    const resp = await fetch(
+      "https://withered-hat-347d.pedro-fillype.workers.dev/gerar-ss",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ssGerada: true, ssNumero: numero })
+      }
+    );
+
+    if (!resp.ok) {
+      alert("Erro ao salvar a SS.");
+      return;
+    }
+
+    alert("SS registrada com sucesso!");
+    carregar();
+
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao conectar com o servidor.");
+  }
+}
+
 async function carregar() {
   const resp = await fetch(API_URL);
   registros = await resp.json();
