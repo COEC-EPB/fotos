@@ -117,6 +117,7 @@
         <th>Endereço</th>
         <th>GPS</th>
         <th>Fotos</th>
+        <th>SS</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -218,21 +219,34 @@ function atualizarTabela() {
   <td>${reg.servicoll}</td>
   <td>${reg.endereco}</td>
   <td>${reg.gps}</td>
-  <td>
+
+  <td style="text-align:center;">
     ${
       reg.fotosUrl?.length
-        ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+        ? reg.fotosUrl.map(url => `
+            <a class="foto" href="${url}" target="_blank">📷 Foto</a>
+          `).join("<br>")
         : "-"
     }
   </td>
-  <td>
+
+  <td style="text-align:center; font-weight:bold;">
     ${
-      reg.ssGerada && reg.ssNumero 
-        ? `<span style="color:green; font-weight:bold;">Sim — Nº ${reg.ssNumero}</span>`
-        : `<button onclick="gerarSS('${reg.id}')" 
-            style="padding:6px 10px; border:none; border-radius:6px; background:#0097CE; color:white; cursor:pointer;">
+      reg.ssGerada && reg.ssNumero
+        ? `<span style="color:green;">SS Nº ${reg.ssNumero}</span>`
+        : `
+          <button onclick="gerarSS('${reg.id}')"
+            style="
+              padding:6px 10px;
+              border:none;
+              border-radius:6px;
+              background:#0097CE;
+              color:white;
+              cursor:pointer;
+            ">
             Gerar SS
-          </button>`
+          </button>
+        `
     }
   </td>
 `;
