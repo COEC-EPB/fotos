@@ -5,19 +5,48 @@
 <title>Registros Linha Viva</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- ÍCONES -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    background: #e9eef3;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    background: #0097CE;
     padding: 20px;
+    color: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+
+  .header h2 {
+    margin: 0 0 10px;
+  }
+
+  .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .filtros input, .filtros select {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    min-width: 180px;
   }
 
   .box {
     background: white;
     padding: 20px;
     border-radius: 8px;
-    max-width: 1200px;
-    margin: auto;
+    max-width: 1400px;
+    margin: 25px auto;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   }
 
@@ -25,40 +54,69 @@
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
-  }
-
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    border-radius: 8px;
+    overflow: hidden;
   }
 
   th {
     background: #0097CE;
     color: white;
+    padding: 10px;
   }
 
-  tr:nth-child(even) {
-    background: #f7f7f7;
+  td {
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+  }
+
+  tr:hover {
+    background: #f1f8ff;
+  }
+
+  a.foto {
+    background: #0097CE;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 3px;
+  }
+
+  a.foto:hover {
+    background: #0079a6;
   }
 </style>
 </head>
 
 <body>
-<div class="box">
-  <h2>Registros Enviados</h2>
-  <p>A tabela abaixo mostra todos os envios do formulário.</p>
 
+<div class="header">
+  <h2>📋 Registros Linha Viva</h2>
+  <div class="filtros">
+    <input type="date" id="filtroData" />
+    <select id="filtroBase">
+      <option value="">Filtrar por Base</option>
+    </select>
+    <select id="filtroRegional">
+      <option value="">Filtrar por Regional</option>
+    </select>
+  </div>
+</div>
+
+<div class="box">
   <table id="tabela">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>Data</th>
         <th>Equipe</th>
         <th>Base</th>
+        <th>Regional</th>
         <th>Componente</th>
         <th>Serviço</th>
         <th>Endereço</th>
         <th>GPS</th>
-        <th>Foto</th>
+        <th>Fotos</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -67,39 +125,78 @@
 
 <script>
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev/listar";
+let registros = [];
 
 async function carregar() {
   const resp = await fetch(API_URL);
-  const dados = await resp.json();
+  registros = await resp.json();
 
+  preencherFiltros();
+  atualizarTabela();
+}
+
+function preencherFiltros() {
+  const baseSel = document.getElementById("filtroBase");
+  const regSel = document.getElementById("filtroRegional");
+
+  const bases = [...new Set(registros.map(r => r.base))];
+  const regionais = [...new Set(registros.map(r => r.regional))];
+
+  bases.forEach(b => {
+    const opt = document.createElement("option");
+    opt.value = b;
+    opt.textContent = b;
+    baseSel.appendChild(opt);
+  });
+
+  regionais.forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r;
+    opt.textContent = r;
+    regSel.appendChild(opt);
+  });
+}
+
+function atualizarTabela() {
   const tbody = document.querySelector("#tabela tbody");
   tbody.innerHTML = "";
 
-  dados.forEach(reg => {
-    const tr = document.createElement("tr");
+  const filtroData = document.getElementById("filtroData").value;
+  const filtroBase = document.getElementById("filtroBase").value;
+  const filtroReg = document.getElementById("filtroRegional").value;
 
-    tr.innerHTML = `
-  <td>${reg.id}</td>
-  <td>${reg.equipe}</td>
-  <td>${reg.base}</td>
-  <td>${reg.componente}</td>
-  <td>${reg.servicoll}</td>
-  <td>${reg.endereco}</td>
-  <td>${reg.gps}</td>
-  <td>
-    ${
-      reg.fotosUrl && reg.fotosUrl.length > 0
-        ? reg.fotosUrl
-            .map(url => `<a href="${url}" target="_blank">📷 Ver Foto</a>`)
-            .join("<br>")
-        : "-"
-    }
-  </td>
-`;
+  registros
+    .filter(r => !filtroData || r.data?.startsWith(filtroData))
+    .filter(r => !filtroBase || r.base === filtroBase)
+    .filter(r => !filtroReg || r.regional === filtroReg)
+    .forEach(reg => {
+      const tr = document.createElement("tr");
 
-    tbody.appendChild(tr);
-  });
+      tr.innerHTML = `
+        <td>${reg.data || "-"}</td>
+        <td>${reg.equipe}</td>
+        <td>${reg.base}</td>
+        <td>${reg.regional || "-"}</td>
+        <td>${reg.componente}</td>
+        <td>${reg.servicoll}</td>
+        <td>${reg.endereco}</td>
+        <td>${reg.gps}</td>
+        <td>
+          ${
+            reg.fotosUrl?.length
+              ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+              : "-"
+          }
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
 }
+
+document.getElementById("filtroData").addEventListener("change", atualizarTabela);
+document.getElementById("filtroBase").addEventListener("change", atualizarTabela);
+document.getElementById("filtroRegional").addEventListener("change", atualizarTabela);
 
 carregar();
 </script>
