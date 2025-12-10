@@ -79,19 +79,23 @@ async function carregar() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${reg.id}</td>
-      <td>${reg.equipe}</td>
-      <td>${reg.base}</td>
-      <td>${reg.componente}</td>
-      <td>${reg.servicoll}</td>
-      <td>${reg.endereco}</td>
-      <td>${reg.gps}</td>
-      <td>
-  ${reg.fotosUrl && reg.fotosUrl.length > 0
-    ? reg.fotosUrl.map(url => `<a href="${url}" target="_blank">📷 Ver Foto</a>`).join("<br>")
-    : "-"
-  }
-</td>
+  <td>${reg.id}</td>
+  <td>${reg.equipe}</td>
+  <td>${reg.base}</td>
+  <td>${reg.componente}</td>
+  <td>${reg.servicoll}</td>
+  <td>${reg.endereco}</td>
+  <td>${reg.gps}</td>
+  <td>
+    ${
+      reg.fotosUrl && reg.fotosUrl.length > 0
+        ? reg.fotosUrl
+            .map(url => `<a href="${url}" target="_blank">📷 Ver Foto</a>`)
+            .join("<br>")
+        : "-"
+    }
+  </td>
+`;
 
     tbody.appendChild(tr);
   });
