@@ -87,11 +87,11 @@ async function carregar() {
       <td>${reg.endereco}</td>
       <td>${reg.gps}</td>
       <td>
-        ${reg.arquivo 
-          ? `<a href="https://withered-hat-347d.pedro-fillype.workers.dev/foto/${reg.arquivo}" target="_blank">📷 Ver Foto</a>` 
-          : '-'}
-      </td>
-    `;
+  ${reg.fotosUrl && reg.fotosUrl.length > 0
+    ? reg.fotosUrl.map(url => `<a href="${url}" target="_blank">📷 Ver Foto</a>`).join("<br>")
+    : "-"
+  }
+</td>
 
     tbody.appendChild(tr);
   });
