@@ -156,6 +156,11 @@ function preencherFiltros() {
     regSel.appendChild(opt);
   });
 }
+  function formatarData(dataISO) {
+  if (!dataISO) return "-";
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
 
 function atualizarTabela() {
   const tbody = document.querySelector("#tabela tbody");
@@ -173,22 +178,22 @@ function atualizarTabela() {
       const tr = document.createElement("tr");
 
       tr.innerHTML = `
-        <td>${reg.data || "-"}</td>
-        <td>${reg.equipe}</td>
-        <td>${reg.base}</td>
-        <td>${reg.regional || "-"}</td>
-        <td>${reg.componente}</td>
-        <td>${reg.servicoll}</td>
-        <td>${reg.endereco}</td>
-        <td>${reg.gps}</td>
-        <td>
-          ${
-            reg.fotosUrl?.length
-              ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
-              : "-"
-          }
-        </td>
-      `;
+  <td>${formatarData(reg.data)}</td>
+  <td>${reg.equipe}</td>
+  <td>${reg.base}</td>
+  <td>${reg.regional || "-"}</td>
+  <td>${reg.componente}</td>
+  <td>${reg.servicoll}</td>
+  <td>${reg.endereco}</td>
+  <td>${reg.gps}</td>
+  <td>
+    ${
+      reg.fotosUrl?.length
+        ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+        : "-"
+    }
+  </td>
+`;
 
       tbody.appendChild(tr);
     });
