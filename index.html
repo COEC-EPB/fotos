@@ -117,7 +117,7 @@
         <th>Endereço</th>
         <th>GPS</th>
         <th>Fotos</th>
-        <th>SS</th>
+        <th>OS</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -147,11 +147,11 @@ let registros = [];
     );
 
     if (!resp.ok) {
-      alert("Erro ao salvar a SS.");
+      alert("Erro ao salvar a OS.");
       return;
     }
 
-    alert("SS registrada com sucesso!");
+    alert("OS registrada com sucesso!");
     carregar();
 
   } catch (e) {
@@ -233,9 +233,9 @@ function atualizarTabela() {
   <td style="text-align:center; font-weight:bold;">
     ${
       reg.ssGerada && reg.ssNumero
-        ? `<span style="color:green;">SS Nº ${reg.ssNumero}</span>`
+        ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
         : `
-          <button onclick="gerarSS('${reg.id}')"
+          <button onclick="gerarOS('${reg.id}')"
             style="
               padding:6px 10px;
               border:none;
