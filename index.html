@@ -52,6 +52,14 @@
   .box {
   overflow-x: auto;
 }
+  thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+  thead {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
 
   table {
     width: 100%;
@@ -59,6 +67,8 @@
     margin-top: 15px;
     border-radius: 8px;
     overflow: hidden;
+    font-size: 14.5px;
+  line-height: 1.4;
   }
 
   th {
@@ -73,6 +83,13 @@
   padding: 14px 12px;  /* mais altura e largura */
   font-size: 14.5px;
 }
+  td:last-child {
+  background: #f5faff;
+}
+  tbody tr:hover td {
+  background: #d9ecfb;
+}
+
   td, th {
   white-space: nowrap;
 }
@@ -80,10 +97,14 @@
   white-space: normal;
   max-width: 260px;
 }
+  td + td, th + th {
+  border-left: 1px solid #e3edf6;
+}
 
-  tr:hover {
-    background: #f1f8ff;
-  }
+  tbody tr:hover {
+  background: #d9ecfb;
+  box-shadow: inset 4px 0 0 #0097CE;
+}
 
   a.foto {
     background: #0097CE;
@@ -94,6 +115,13 @@
     display: inline-block;
     margin-bottom: 3px;
   }
+  tbody tr:nth-child(even) {
+  background: #f7fbff;
+}
+
+tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
 
   a.foto:hover {
     background: #0079a6;
