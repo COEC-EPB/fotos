@@ -116,6 +116,9 @@
     <th>Serviço</th>
     <th>Endereço</th>
     <th>GPS</th>
+    <th>Condutor</th>
+    <th>Alma de Aço</th>
+    <th>Acesso Caminhão</th>
     <th>Observação</th> <!-- 👈 FALTAVA ISSO -->
     <th>Fotos</th>
     <th>OS</th>
@@ -220,6 +223,11 @@ function atualizarTabela() {
   <td>${reg.servicoll}</td>
   <td>${reg.endereco}</td>
   <td>${reg.gps}</td>
+  <td>${reg.condutor || "-"}</td>
+  <td>${reg.almaaco || "-"}</td>
+  <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
+  ${reg.acessocaminhao || "-"}
+</td>
   <td>${reg.observacao || "-"}</td>
 
   <td style="text-align:center;">
