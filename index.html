@@ -237,17 +237,17 @@ function atualizarTabela() {
       reg.ssGerada && reg.ssNumero
         ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
         : `
-          <button onclick="gerarOS('${reg.id}')"
-            style="
-              padding:6px 10px;
-              border:none;
-              border-radius:6px;
-              background:#0097CE;
-              color:white;
-              cursor:pointer;
-            ">
-            Gerar SS
-          </button>
+                <button onclick="gerarSS('${reg.id}')"
+        style="
+          padding:6px 10px;
+          border:none;
+          border-radius:6px;
+          background:#0097CE;
+          color:white;
+          cursor:pointer;
+        ">
+        Gerar SS
+      </button>
         `
     }
   </td>
