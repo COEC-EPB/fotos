@@ -110,6 +110,47 @@
     margin-bottom: 3px;
   }
   a.foto:hover { background: #0079a6; }
+  /* Área da tabela com scroll próprio */
+.table-wrap {
+  max-width: 1700px;      /* pode manter ou tirar */
+  margin: 25px auto;
+  background: white;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Barra horizontal no topo */
+.hscroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 14px;          /* altura da barra */
+  border-bottom: 1px solid #dfe7ef;
+  background: #f7fbff;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* “conteúdo” fake para criar a largura da barra */
+.hscroll-top .spacer {
+  height: 1px;
+}
+
+/* Container real da tabela: vertical + horizontal */
+.table-container {
+  max-height: 70vh;      /* 👈 aqui resolve o “descer a página toda” */
+  overflow: auto;
+  border-top: none;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Cabeçalho sticky continua funcionando */
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
 </style>
 </head>
 
@@ -148,8 +189,13 @@
   </div>
 </div>
 
-<div class="box">
-  <table id="tabela">
+<div class="table-wrap">
+  <!-- Scroll horizontal em cima -->
+  <div class="hscroll-top" id="hscrollTop">
+    <div class="spacer" id="hscrollSpacer"></div>
+  </div>
+  <!-- Tabela com scroll próprio -->
+  <div class="table-container" id="tableScroll">
     <thead>
       <tr>
         <th>Data</th>
@@ -170,6 +216,8 @@
     </thead>
     <tbody></tbody>
   </table>
+    </div>
+</div>
 </div>
 
 <script>
@@ -380,6 +428,36 @@ primeiraPagina().catch(err=>{
   console.error(err);
   setStatus("Erro ao carregar", false);
 });
+  function syncHorizontalScroll() {
+  const top = document.getElementById("hscrollTop");
+  const spacer = document.getElementById("hscrollSpacer");
+  const tableScroll = document.getElementById("tableScroll");
+  const table = document.getElementById("tabela");
+
+  if (!top || !spacer || !tableScroll || !table) return;
+
+  // Ajusta a largura do “spacer” pra igualar a largura real da tabela
+  const tableWidth = table.scrollWidth;
+  spacer.style.width = tableWidth + "px";
+
+  // Sincroniza os scrolls
+  let syncing = false;
+
+  top.addEventListener("scroll", () => {
+    if (syncing) return;
+    syncing = true;
+    tableScroll.scrollLeft = top.scrollLeft;
+    syncing = false;
+  });
+
+  tableScroll.addEventListener("scroll", () => {
+    if (syncing) return;
+    syncing = true;
+    top.scrollLeft = tableScroll.scrollLeft;
+    syncing = false;
+  });
+}
+  syncHorizontalScroll();
 </script>
 
 </body>
