@@ -4,17 +4,10 @@
 <meta charset="UTF-8">
 <title>Registros Linha Viva</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- ÍCONES -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #e9eef3;
-    margin: 0;
-    padding: 0;
-  }
+  body { font-family: Arial, sans-serif; background: #e9eef3; margin: 0; padding: 0; }
 
   .header {
     background: #0097CE;
@@ -22,16 +15,14 @@
     color: white;
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   }
-
-  .header h2 {
-    margin: 0 0 10px;
-  }
+  .header h2 { margin: 0 0 10px; }
 
   .filtros {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 10px;
+    align-items: end;
   }
 
   .filtros input, .filtros select {
@@ -41,6 +32,40 @@
     min-width: 180px;
   }
 
+  .pagerbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    margin-top: 12px;
+  }
+
+  .pager-left, .pager-right{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-primary{ background:#0d6efd; color:#fff; }
+  .btn-secondary{ background:#6c757d; color:#fff; }
+  .btn-outline{ background:#fff; color:#0d6efd; border:1px solid #0d6efd; }
+  .btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+  .status{
+    font-weight:700;
+    margin: 12px 0 0;
+    color:#0f5132;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
   .box {
     background: white;
     padding: 20px;
@@ -48,18 +73,11 @@
     max-width: 1700px;
     margin: 25px auto;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    overflow-x: auto;
   }
-  .box {
-  overflow-x: auto;
-}
-  thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-  thead {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
+
+  thead th { position: sticky; top: 0; z-index: 2; }
+  thead { box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
   table {
     width: 100%;
@@ -68,43 +86,19 @@
     border-radius: 8px;
     overflow: hidden;
     font-size: 14.5px;
-  line-height: 1.4;
+    line-height: 1.4;
   }
 
-  th {
-  background: #0097CE;
-  color: white;
-  padding: 14px 12px;
-  font-size: 15px;
-}
+  th { background: #0097CE; color: white; padding: 14px 12px; font-size: 15px; }
+  td { border-bottom: 1px solid #ddd; padding: 14px 12px; font-size: 14.5px; }
+  td:last-child { background: #f5faff; }
 
-  td {
-  border-bottom: 1px solid #ddd;
-  padding: 14px 12px;  /* mais altura e largura */
-  font-size: 14.5px;
-}
-  td:last-child {
-  background: #f5faff;
-}
-  tbody tr:hover td {
-  background: #d9ecfb;
-}
+  tbody tr:hover td { background: #d9ecfb; }
+  tbody tr:nth-child(even) { background: #f7fbff; }
+  tbody tr:nth-child(odd) { background: #ffffff; }
 
-  td, th {
-  white-space: nowrap;
-}
-  td:nth-child(12) {   /* Observação */
-  white-space: normal;
-  max-width: 260px;
-}
-  td + td, th + th {
-  border-left: 1px solid #e3edf6;
-}
-
-  tbody tr:hover {
-  background: #d9ecfb;
-  box-shadow: inset 4px 0 0 #0097CE;
-}
+  td, th { white-space: nowrap; }
+  td:nth-child(12) { white-space: normal; max-width: 260px; }
 
   a.foto {
     background: #0097CE;
@@ -115,17 +109,7 @@
     display: inline-block;
     margin-bottom: 3px;
   }
-  tbody tr:nth-child(even) {
-  background: #f7fbff;
-}
-
-tbody tr:nth-child(odd) {
-  background: #ffffff;
-}
-
-  a.foto:hover {
-    background: #0079a6;
-  }
+  a.foto:hover { background: #0079a6; }
 </style>
 </head>
 
@@ -133,6 +117,7 @@ tbody tr:nth-child(odd) {
 
 <div class="header">
   <h2>📋 Registros Linha Viva</h2>
+
   <div class="filtros">
     <input type="date" id="filtroData" />
     <select id="filtroBase">
@@ -141,175 +126,260 @@ tbody tr:nth-child(odd) {
     <select id="filtroRegional">
       <option value="">Filtrar por Regional</option>
     </select>
+
+    <select id="itensPorPagina">
+      <option value="25">25 / página</option>
+      <option value="50" selected>50 / página</option>
+      <option value="100">100 / página</option>
+      <option value="200">200 / página</option>
+    </select>
+  </div>
+
+  <div class="pagerbar">
+    <div class="pager-left">
+      <button class="btn btn-outline" id="btnAnterior">⬅️ Anterior</button>
+      <button class="btn btn-outline" id="btnProximo">Próximo ➡️</button>
+      <span id="infoPagina" style="font-weight:700;">Página 1</span>
+    </div>
+
+    <div class="pager-right">
+      <span id="status" class="status"><i class="bi bi-check2-square"></i> Pronto</span>
+    </div>
   </div>
 </div>
 
 <div class="box">
   <table id="tabela">
     <thead>
-  <tr>
-    <th>Data</th>
-    <th>Equipe</th>
-    <th>Base</th>
-    <th>Regional</th>
-    <th>Componente</th>
-    <th>Serviço</th>
-    <th>Endereço</th>
-    <th>GPS</th>
-    <th>Condutor</th>
-    <th>Alma de Aço</th>
-    <th>Acesso Caminhão</th>
-    <th>Observação</th> <!-- 👈 FALTAVA ISSO -->
-    <th>Fotos</th>
-    <th>OS</th>
-  </tr>
-</thead>
+      <tr>
+        <th>Data</th>
+        <th>Equipe</th>
+        <th>Base</th>
+        <th>Regional</th>
+        <th>Componente</th>
+        <th>Serviço</th>
+        <th>Endereço</th>
+        <th>GPS</th>
+        <th>Condutor</th>
+        <th>Alma de Aço</th>
+        <th>Acesso Caminhão</th>
+        <th>Observação</th>
+        <th>Fotos</th>
+        <th>OS</th>
+      </tr>
+    </thead>
     <tbody></tbody>
   </table>
 </div>
 
 <script>
-const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev/listar";
-let registros = [];
+const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
 
-  async function gerarSS(id) {
-  const numero = prompt("Digite o número da SS:");
+// página atual (itens carregados do servidor)
+let itensPagina = [];
 
-  if (!numero) {
-    alert("SS não informada.");
-    return;
+// paginação por cursor (KV)
+let pageNumber = 1;
+let currentCursor = null;      // cursor usado pra buscar esta página
+let nextCursor = null;         // cursor para próxima
+let cursorHistory = [];        // pilha de cursores anteriores (pra voltar)
+
+// sets pra popular filtros com o que já foi visto
+const setBases = new Set();
+const setRegionais = new Set();
+
+function setStatus(msg, ok=true){
+  const el = document.getElementById("status");
+  el.style.color = ok ? "#0f5132" : "#842029";
+  el.innerHTML = (ok ? `<i class="bi bi-check2-square"></i>` : `<i class="bi bi-exclamation-triangle"></i>`) + " " + msg;
+}
+
+function formatarData(dataISO) {
+  if (!dataISO) return "-";
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function preencherFiltrosIncremental(lista){
+  const baseSel = document.getElementById("filtroBase");
+  const regSel = document.getElementById("filtroRegional");
+
+  for (const r of lista){
+    if (r.base) setBases.add(r.base);
+    if (r.regional) setRegionais.add(r.regional);
   }
 
-  try {
-    const resp = await fetch(
-      "https://withered-hat-347d.pedro-fillype.workers.dev/gerar-ss",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ssGerada: true, ssNumero: numero })
-      }
-    );
+  // recria opções (simples e confiável)
+  const baseAtual = baseSel.value;
+  const regAtual = regSel.value;
 
-    if (!resp.ok) {
-      alert("Erro ao salvar a OS.");
-      return;
-    }
+  baseSel.innerHTML = `<option value="">Filtrar por Base</option>`;
+  [...setBases].sort().forEach(b=>{
+    const opt = document.createElement("option");
+    opt.value = b; opt.textContent = b;
+    baseSel.appendChild(opt);
+  });
+
+  regSel.innerHTML = `<option value="">Filtrar por Regional</option>`;
+  [...setRegionais].sort().forEach(r=>{
+    const opt = document.createElement("option");
+    opt.value = r; opt.textContent = r;
+    regSel.appendChild(opt);
+  });
+
+  baseSel.value = baseAtual;
+  regSel.value = regAtual;
+}
+
+function atualizarTabela(){
+  const tbody = document.querySelector("#tabela tbody");
+  tbody.innerHTML = "";
+
+  const filtroData = document.getElementById("filtroData").value;
+  const filtroBase = document.getElementById("filtroBase").value;
+  const filtroReg  = document.getElementById("filtroRegional").value;
+
+  const filtrados = itensPagina
+    .filter(r => !filtroData || (r.data || "").startsWith(filtroData))
+    .filter(r => !filtroBase || r.base === filtroBase)
+    .filter(r => !filtroReg  || r.regional === filtroReg);
+
+  filtrados.forEach(reg=>{
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${formatarData(reg.data)}</td>
+      <td>${reg.equipe || "-"}</td>
+      <td>${reg.base || "-"}</td>
+      <td>${reg.regional || "-"}</td>
+      <td>${reg.componente || "-"}</td>
+      <td>${reg.servicoll || "-"}</td>
+      <td>${reg.endereco || "-"}</td>
+      <td>${reg.gps || "-"}</td>
+      <td>${reg.condutor || "-"}</td>
+      <td>${reg.almaaco || "-"}</td>
+      <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
+        ${reg.acessocaminhao || "-"}
+      </td>
+      <td>${reg.observacao || "-"}</td>
+      <td style="text-align:center;">
+        ${
+          reg.fotosUrl?.length
+            ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+            : "-"
+        }
+      </td>
+      <td style="text-align:center; font-weight:bold;">
+        ${
+          reg.ssGerada && reg.ssNumero
+            ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
+            : `<button onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
+        }
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("infoPagina").innerText =
+    `Página ${pageNumber} • ${filtrados.length} item(ns) na tela`;
+}
+
+async function gerarSS(id){
+  const numero = prompt("Digite o número da SS:");
+  if (!numero) return alert("SS não informada.");
+
+  try {
+    const resp = await fetch(`${API_URL}/gerar-ss`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ssGerada: true, ssNumero: numero })
+    });
+
+    if (!resp.ok) return alert("Erro ao salvar a OS.");
 
     alert("OS registrada com sucesso!");
-    carregar();
-
+    await carregarPaginaAtual(); // recarrega a página atual
   } catch (e) {
     console.error(e);
     alert("Erro ao conectar com o servidor.");
   }
 }
 
-async function carregar() {
-  const resp = await fetch(API_URL);
-  registros = await resp.json();
+function getLimit(){
+  const v = parseInt(document.getElementById("itensPorPagina").value || "50", 10);
+  return Math.min(Math.max(v, 1), 200);
+}
 
-  preencherFiltros();
+async function fetchPage(cursor){
+  const limit = getLimit();
+  const qs = new URLSearchParams();
+  qs.set("limit", String(limit));
+  if (cursor) qs.set("cursor", cursor);
+
+  const resp = await fetch(`${API_URL}/listar?${qs.toString()}`);
+  if (!resp.ok) throw new Error("Falha ao listar");
+  return resp.json();
+}
+
+async function carregarPaginaAtual(){
+  setStatus("Carregando...", true);
+
+  const payload = await fetchPage(currentCursor);
+
+  itensPagina = payload.items || [];
+  nextCursor = payload.nextCursor;
+  const hasMore = payload.hasMore === true;
+
+  // botões
+  document.getElementById("btnAnterior").disabled = (pageNumber <= 1);
+  document.getElementById("btnProximo").disabled = !hasMore;
+
+  preencherFiltrosIncremental(itensPagina);
   atualizarTabela();
+
+  setStatus(`Carregado (${itensPagina.length} registro(s))`, true);
 }
 
-function preencherFiltros() {
-  const baseSel = document.getElementById("filtroBase");
-  const regSel = document.getElementById("filtroRegional");
-
-  const bases = [...new Set(registros.map(r => r.base))];
-  const regionais = [...new Set(registros.map(r => r.regional))];
-
-  bases.forEach(b => {
-    const opt = document.createElement("option");
-    opt.value = b;
-    opt.textContent = b;
-    baseSel.appendChild(opt);
-  });
-
-  regionais.forEach(r => {
-    const opt = document.createElement("option");
-    opt.value = r;
-    opt.textContent = r;
-    regSel.appendChild(opt);
-  });
-}
-  function formatarData(dataISO) {
-  if (!dataISO) return "-";
-  const [ano, mes, dia] = dataISO.split("-");
-  return `${dia}/${mes}/${ano}`;
+async function primeiraPagina(){
+  pageNumber = 1;
+  currentCursor = null;
+  nextCursor = null;
+  cursorHistory = [];
+  await carregarPaginaAtual();
 }
 
-function atualizarTabela() {
-  const tbody = document.querySelector("#tabela tbody");
-  tbody.innerHTML = "";
+document.getElementById("btnProximo").addEventListener("click", async ()=>{
+  if (!nextCursor) return;
 
-  const filtroData = document.getElementById("filtroData").value;
-  const filtroBase = document.getElementById("filtroBase").value;
-  const filtroReg = document.getElementById("filtroRegional").value;
+  cursorHistory.push(currentCursor); // guarda de onde eu vim
+  currentCursor = nextCursor;
+  pageNumber += 1;
+  await carregarPaginaAtual();
+});
 
-  registros
-    .filter(r => !filtroData || r.data?.startsWith(filtroData))
-    .filter(r => !filtroBase || r.base === filtroBase)
-    .filter(r => !filtroReg || r.regional === filtroReg)
-    .forEach(reg => {
-      const tr = document.createElement("tr");
+document.getElementById("btnAnterior").addEventListener("click", async ()=>{
+  if (pageNumber <= 1) return;
 
-      tr.innerHTML = `
-  <td>${formatarData(reg.data)}</td>
-  <td>${reg.equipe}</td>
-  <td>${reg.base}</td>
-  <td>${reg.regional || "-"}</td>
-  <td>${reg.componente}</td>
-  <td>${reg.servicoll}</td>
-  <td>${reg.endereco}</td>
-  <td>${reg.gps}</td>
-  <td>${reg.condutor || "-"}</td>
-  <td>${reg.almaaco || "-"}</td>
-  <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
-  ${reg.acessocaminhao || "-"}
-</td>
-  <td>${reg.observacao || "-"}</td>
+  currentCursor = cursorHistory.pop() ?? null;
+  pageNumber -= 1;
+  await carregarPaginaAtual();
+});
 
-  <td style="text-align:center;">
-    ${
-      reg.fotosUrl?.length
-        ? reg.fotosUrl.map(url => `
-            <a class="foto" href="${url}" target="_blank">📷 Foto</a>
-          `).join("<br>")
-        : "-"
-    }
-  </td>
-
-  <td style="text-align:center; font-weight:bold;">
-    ${
-      reg.ssGerada && reg.ssNumero
-        ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
-        : `
-                <button onclick="gerarSS('${reg.id}')"
-        style="
-          padding:6px 10px;
-          border:none;
-          border-radius:6px;
-          background:#0097CE;
-          color:white;
-          cursor:pointer;
-        ">
-        Gerar SS
-      </button>
-        `
-    }
-  </td>
-`;
-
-      tbody.appendChild(tr);
-    });
-}
-
+// filtros só atuam na página atual (leve)
 document.getElementById("filtroData").addEventListener("change", atualizarTabela);
 document.getElementById("filtroBase").addEventListener("change", atualizarTabela);
 document.getElementById("filtroRegional").addEventListener("change", atualizarTabela);
 
-carregar();
+// mudar itens por página reinicia paginação
+document.getElementById("itensPorPagina").addEventListener("change", async ()=>{
+  await primeiraPagina();
+});
+
+// start
+primeiraPagina().catch(err=>{
+  console.error(err);
+  setStatus("Erro ao carregar", false);
+});
 </script>
 
 </body>
