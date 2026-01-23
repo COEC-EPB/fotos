@@ -52,8 +52,6 @@
     cursor: pointer;
     font-weight: 600;
   }
-  .btn-primary{ background:#0d6efd; color:#fff; }
-  .btn-secondary{ background:#6c757d; color:#fff; }
   .btn-outline{ background:#fff; color:#0d6efd; border:1px solid #0d6efd; }
   .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
@@ -66,31 +64,29 @@
     gap:8px;
   }
 
-  /* ===========================
-     ✅ NOVO: WRAP + SCROLL TOP
-  =========================== */
+  /* ✅ AGORA USA A TELA TODA */
   .table-wrap {
     background: white;
-    border-radius: 8px;
-    max-width: 1700px;
-    margin: 25px auto;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    border-radius: 0;                  /* opcional: deixa “full width” mais clean */
+    width: 100%;
+    margin: 0;                         /* sem margens laterais */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
     overflow: hidden;
   }
 
-  /* Barra horizontal no topo */
+  /* ✅ barra horizontal no topo mais discreta */
   .hscroll-top {
     overflow-x: auto;
     overflow-y: hidden;
-    height: 14px;
+    height: 12px;
     border-bottom: 1px solid #dfe7ef;
     background: #f7fbff;
   }
   .hscroll-top .spacer { height: 1px; }
 
-  /* Scroll vertical + horizontal dentro da tabela */
+  /* ✅ ALTURA MAIOR (ajuste aqui) */
   .table-container {
-    max-height: 70vh;       /* ✅ aqui controla altura da área rolável */
+    max-height: 82vh;     /* era 70vh -> aumentei */
     overflow: auto;
     background: white;
   }
@@ -165,7 +161,6 @@
   </div>
 </div>
 
-<!-- ✅ NOVO: wrap com barra horizontal em cima -->
 <div class="table-wrap">
   <div class="hscroll-top" id="hscrollTop">
     <div class="spacer" id="hscrollSpacer"></div>
@@ -199,16 +194,12 @@
 <script>
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
 
-// página atual (itens carregados do servidor)
 let itensPagina = [];
-
-// paginação por cursor (KV)
 let pageNumber = 1;
-let currentCursor = null;      // cursor usado pra buscar esta página
-let nextCursor = null;         // cursor para próxima
-let cursorHistory = [];        // pilha de cursores anteriores (pra voltar)
+let currentCursor = null;
+let nextCursor = null;
+let cursorHistory = [];
 
-// sets pra popular filtros com o que já foi visto
 const setBases = new Set();
 const setRegionais = new Set();
 
@@ -224,9 +215,6 @@ function formatarData(dataISO) {
   return `${dia}/${mes}/${ano}`;
 }
 
-/* ===========================
-   ✅ NOVO: scroll horizontal top sincronizado
-=========================== */
 function syncHorizontalScroll(){
   const top = document.getElementById("hscrollTop");
   const spacer = document.getElementById("hscrollSpacer");
@@ -302,7 +290,6 @@ function atualizarTabela(){
 
   filtrados.forEach(reg=>{
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
       <td>${formatarData(reg.data)}</td>
       <td>${reg.equipe || "-"}</td>
@@ -339,7 +326,6 @@ function atualizarTabela(){
   document.getElementById("infoPagina").innerText =
     `Página ${pageNumber} • ${filtrados.length} item(ns) na tela`;
 
-  // ✅ recalcula barra horizontal do topo após render
   requestAnimationFrame(syncHorizontalScroll);
 }
 
@@ -408,7 +394,6 @@ async function primeiraPagina(){
 
 document.getElementById("btnProximo").addEventListener("click", async ()=>{
   if (!nextCursor) return;
-
   cursorHistory.push(currentCursor);
   currentCursor = nextCursor;
   pageNumber += 1;
@@ -417,7 +402,6 @@ document.getElementById("btnProximo").addEventListener("click", async ()=>{
 
 document.getElementById("btnAnterior").addEventListener("click", async ()=>{
   if (pageNumber <= 1) return;
-
   currentCursor = cursorHistory.pop() ?? null;
   pageNumber -= 1;
   await carregarPaginaAtual();
@@ -431,10 +415,8 @@ document.getElementById("itensPorPagina").addEventListener("change", async ()=>{
   await primeiraPagina();
 });
 
-// recalcula barra do topo se mudar tamanho
 window.addEventListener("resize", () => requestAnimationFrame(syncHorizontalScroll));
 
-// start
 primeiraPagina().then(() => {
   requestAnimationFrame(syncHorizontalScroll);
 }).catch(err=>{
