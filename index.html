@@ -364,7 +364,13 @@ function atualizarTabela(){
       <td>${reg.base || "-"}</td>
       <td>${reg.regional || "-"}</td>
       <td>${reg.componente || "-"}</td>
-      <td>${reg.servicoll || "-"}</td>
+      <td>
+  ${
+    (reg.tipo_servico || "") === "LINHA_MORTA"
+      ? `LM • ${reg.tipo_rede || "-"} • ${reg.servico_lm || "-"}`
+      : `LV • ${reg.servicoll || "-"}`
+  }
+</td>
       <td>${reg.endereco || "-"}</td>
       <td>${reg.gps || "-"}</td>
       <td>${reg.condutor || "-"}</td>
