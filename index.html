@@ -171,25 +171,24 @@
   <div class="table-container" id="tableScroll">
     <table id="tabela">
       <thead>
-        <tr>
-          <th>Excluir</th>
-          <th>Data</th>
-          <th>Equipe</th>
-          <th>Base</th>
-          <th>Regional</th>
-          <th>Componente</th>
-          <th>Serviço</th>
-          <th>Endereço</th>
-          <th>GPS</th>
-          <th>Condutor</th>
-          <th>Alma de Aço</th>
-          <th>Acesso Caminhão</th>
-          <th>Observação</th>
-          <th>Fotos</th>
-          <th>OS</th>
-          <th>Excluir</th>
-        </tr>
-      </thead>
+      <tr>
+        <th>Excluir</th>
+        <th>Data</th>
+        <th>Equipe</th>
+        <th>Base</th>
+        <th>Regional</th>
+        <th>Componente</th>
+        <th>Serviço</th>
+        <th>Endereço</th>
+        <th>GPS</th>
+        <th>Condutor</th>
+        <th>Alma de Aço</th>
+        <th>Acesso Caminhão</th>
+        <th>Observação</th>
+        <th>Fotos</th>
+        <th>OS</th>
+      </tr>
+    </thead>
       <tbody></tbody>
     </table>
   </div>
@@ -293,61 +292,69 @@ function atualizarTabela(){
     .filter(r => !filtroBase || r.base === filtroBase)
     .filter(r => !filtroReg  || r.regional === filtroReg);
 
-  filtrados.forEach(reg=>{
+  filtrados.forEach(reg => {
+    const tr = document.createElement("tr"); // ✅ CRIA A LINHA
+
     const checked = selectedIds.has(reg.id) ? "checked" : "";
 
-tr.innerHTML = `
-  <td style="text-align:center;">
-    <input type="checkbox" data-id="${reg.id}" ${checked} />
-  </td>
-  <td>${formatarData(reg.data)}</td>
-  <td>${reg.equipe || "-"}</td>
-  <td>${reg.base || "-"}</td>
-  <td>${reg.regional || "-"}</td>
-  <td>${reg.componente || "-"}</td>
-  <td>${reg.servicoll || "-"}</td>
-  <td>${reg.endereco || "-"}</td>
-  <td>${reg.gps || "-"}</td>
-  <td>${reg.condutor || "-"}</td>
-  <td>${reg.almaaco || "-"}</td>
-  <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
-    ${reg.acessocaminhao || "-"}
-  </td>
-  <td>${reg.observacao || "-"}</td>
-  <td style="text-align:center;">
-    ${
-      reg.fotosUrl?.length
-        ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
-        : "-"
-    }
-  </td>
-  <td style="text-align:center; font-weight:bold;">
-    ${
-      reg.ssGerada && reg.ssNumero
-        ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
-        : `<button onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
-    }
-  </td>
-`;
-    tbody.appendChild(tr);
-  });
-  const cb = tr.querySelector('input[type="checkbox"][data-id]');
-cb.addEventListener("change", (e) => {
-  const id = e.target.getAttribute("data-id");
-  if (!id) return;
-  if (e.target.checked) selectedIds.add(id);
-  else selectedIds.delete(id);
+    tr.innerHTML = `
+      <td style="text-align:center;">
+        <input type="checkbox" data-id="${reg.id}" ${checked} />
+      </td>
+      <td>${formatarData(reg.data)}</td>
+      <td>${reg.equipe || "-"}</td>
+      <td>${reg.base || "-"}</td>
+      <td>${reg.regional || "-"}</td>
+      <td>${reg.componente || "-"}</td>
+      <td>${reg.servicoll || "-"}</td>
+      <td>${reg.endereco || "-"}</td>
+      <td>${reg.gps || "-"}</td>
+      <td>${reg.condutor || "-"}</td>
+      <td>${reg.almaaco || "-"}</td>
+      <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
+        ${reg.acessocaminhao || "-"}
+      </td>
+      <td>${reg.observacao || "-"}</td>
+      <td style="text-align:center;">
+        ${
+          reg.fotosUrl?.length
+            ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+            : "-"
+        }
+      </td>
+      <td style="text-align:center; font-weight:bold;">
+        ${
+          reg.ssGerada && reg.ssNumero
+            ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
+            : `<button onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
+        }
+      </td>
+    `;
 
+    tbody.appendChild(tr);
+
+    // ✅ EVENTO DO CHECKBOX (TEM QUE SER DENTRO DO forEach)
+    const cb = tr.querySelector('input[type="checkbox"][data-id]');
+    cb.addEventListener("change", (e) => {
+      const id = e.target.getAttribute("data-id");
+      if (!id) return;
+
+      if (e.target.checked) selectedIds.add(id);
+      else selectedIds.delete(id);
+
+      document.getElementById("infoPagina").innerText =
+        `Página ${pageNumber} • ${filtrados.length} item(ns) na tela • ${selectedIds.size} selecionado(s)`;
+    });
+  });
+
+  // texto padrão (se ninguém marcou nada ainda)
   document.getElementById("infoPagina").innerText =
     `Página ${pageNumber} • ${filtrados.length} item(ns) na tela • ${selectedIds.size} selecionado(s)`;
-});
-
-  document.getElementById("infoPagina").innerText =
-    `Página ${pageNumber} • ${filtrados.length} item(ns) na tela`;
 
   requestAnimationFrame(syncHorizontalScroll);
 }
 
+  
   async function excluirSelecionados() {
   const token = document.getElementById("adminToken").value.trim();
   if (!token) return alert("Informe o Token admin.");
