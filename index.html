@@ -155,9 +155,11 @@
       <span id="infoPagina" style="font-weight:700;">Página 1</span>
     </div>
 
-    <div class="pager-right">
-      <span id="status" class="status"><i class="bi bi-check2-square"></i> Pronto</span>
-    </div>
+    <div class="pager-right" style="gap:10px; display:flex; align-items:center; flex-wrap:wrap;">
+  <input id="adminToken" type="password" placeholder="Token admin" style="min-width:180px;" />
+  <button class="btn btn-outline" id="btnExcluirSelecionados">🗑️ Excluir selecionados</button>
+  <span id="status" class="status"><i class="bi bi-check2-square"></i> Pronto</span>
+</div>
   </div>
 </div>
 
@@ -170,6 +172,7 @@
     <table id="tabela">
       <thead>
         <tr>
+          <th>Excluir</th>
           <th>Data</th>
           <th>Equipe</th>
           <th>Base</th>
@@ -184,6 +187,7 @@
           <th>Observação</th>
           <th>Fotos</th>
           <th>OS</th>
+          <th>Excluir</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -192,6 +196,7 @@
 </div>
 
 <script>
+  const selectedIds = new Set();
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
 
 let itensPagina = [];
@@ -289,45 +294,100 @@ function atualizarTabela(){
     .filter(r => !filtroReg  || r.regional === filtroReg);
 
   filtrados.forEach(reg=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${formatarData(reg.data)}</td>
-      <td>${reg.equipe || "-"}</td>
-      <td>${reg.base || "-"}</td>
-      <td>${reg.regional || "-"}</td>
-      <td>${reg.componente || "-"}</td>
-      <td>${reg.servicoll || "-"}</td>
-      <td>${reg.endereco || "-"}</td>
-      <td>${reg.gps || "-"}</td>
-      <td>${reg.condutor || "-"}</td>
-      <td>${reg.almaaco || "-"}</td>
-      <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
-        ${reg.acessocaminhao || "-"}
-      </td>
-      <td>${reg.observacao || "-"}</td>
-      <td style="text-align:center;">
-        ${
-          reg.fotosUrl?.length
-            ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
-            : "-"
-        }
-      </td>
-      <td style="text-align:center; font-weight:bold;">
-        ${
-          reg.ssGerada && reg.ssNumero
-            ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
-            : `<button onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
-        }
-      </td>
-    `;
+    const checked = selectedIds.has(reg.id) ? "checked" : "";
+
+tr.innerHTML = `
+  <td style="text-align:center;">
+    <input type="checkbox" data-id="${reg.id}" ${checked} />
+  </td>
+  <td>${formatarData(reg.data)}</td>
+  <td>${reg.equipe || "-"}</td>
+  <td>${reg.base || "-"}</td>
+  <td>${reg.regional || "-"}</td>
+  <td>${reg.componente || "-"}</td>
+  <td>${reg.servicoll || "-"}</td>
+  <td>${reg.endereco || "-"}</td>
+  <td>${reg.gps || "-"}</td>
+  <td>${reg.condutor || "-"}</td>
+  <td>${reg.almaaco || "-"}</td>
+  <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
+    ${reg.acessocaminhao || "-"}
+  </td>
+  <td>${reg.observacao || "-"}</td>
+  <td style="text-align:center;">
+    ${
+      reg.fotosUrl?.length
+        ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+        : "-"
+    }
+  </td>
+  <td style="text-align:center; font-weight:bold;">
+    ${
+      reg.ssGerada && reg.ssNumero
+        ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
+        : `<button onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
+    }
+  </td>
+`;
     tbody.appendChild(tr);
   });
+  const cb = tr.querySelector('input[type="checkbox"][data-id]');
+cb.addEventListener("change", (e) => {
+  const id = e.target.getAttribute("data-id");
+  if (!id) return;
+  if (e.target.checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+
+  document.getElementById("infoPagina").innerText =
+    `Página ${pageNumber} • ${filtrados.length} item(ns) na tela • ${selectedIds.size} selecionado(s)`;
+});
 
   document.getElementById("infoPagina").innerText =
     `Página ${pageNumber} • ${filtrados.length} item(ns) na tela`;
 
   requestAnimationFrame(syncHorizontalScroll);
 }
+
+  async function excluirSelecionados() {
+  const token = document.getElementById("adminToken").value.trim();
+  if (!token) return alert("Informe o Token admin.");
+
+  const ids = [...selectedIds];
+  if (!ids.length) return alert("Nenhum registro selecionado para excluir.");
+
+  const ok = confirm(`Tem certeza que deseja excluir ${ids.length} registro(s)? Essa ação não pode ser desfeita.`);
+  if (!ok) return;
+
+  try {
+    setStatus("Excluindo...", true);
+
+    const resp = await fetch(`${API_URL}/excluir`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": token
+      },
+      body: JSON.stringify({ ids })
+    });
+
+    const out = await resp.json().catch(() => ({}));
+    if (!resp.ok || !out.ok) {
+      return alert(out.error || "Erro ao excluir.");
+    }
+
+    alert(`Excluídos: ${out.deleted}`);
+    selectedIds.clear();
+    await carregarPaginaAtual();
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao conectar com o servidor.");
+  } finally {
+    setStatus("Pronto", true);
+  }
+}
+
+document.getElementById("btnExcluirSelecionados")
+  .addEventListener("click", excluirSelecionados);
 
 async function gerarSS(id){
   const numero = prompt("Digite o número da SS:");
