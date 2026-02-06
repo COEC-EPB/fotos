@@ -51,8 +51,10 @@
     padding: 8px 12px;
     cursor: pointer;
     font-weight: 600;
+    white-space: nowrap;
   }
   .btn-outline{ background:#fff; color:#0d6efd; border:1px solid #0d6efd; }
+  .btn-danger{ background:#dc3545; color:#fff; border:1px solid #dc3545; }
   .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
   .status{
@@ -64,17 +66,15 @@
     gap:8px;
   }
 
-  /* ✅ AGORA USA A TELA TODA */
   .table-wrap {
     background: white;
-    border-radius: 0;                  /* opcional: deixa “full width” mais clean */
+    border-radius: 0;
     width: 100%;
-    margin: 0;                         /* sem margens laterais */
+    margin: 0;
     box-shadow: 0 2px 6px rgba(0,0,0,0.18);
     overflow: hidden;
   }
 
-  /* ✅ barra horizontal no topo mais discreta */
   .hscroll-top {
     overflow-x: auto;
     overflow-y: hidden;
@@ -84,9 +84,8 @@
   }
   .hscroll-top .spacer { height: 1px; }
 
-  /* ✅ ALTURA MAIOR (ajuste aqui) */
   .table-container {
-    max-height: 82vh;     /* era 70vh -> aumentei */
+    max-height: 82vh;
     overflow: auto;
     background: white;
   }
@@ -111,7 +110,8 @@
   tbody tr:nth-child(odd) { background: #ffffff; }
 
   td, th { white-space: nowrap; }
-  td:nth-child(12) { white-space: normal; max-width: 260px; }
+  /* Observação (ajuste se mudar coluna) */
+  td:nth-child(13) { white-space: normal; max-width: 260px; }
 
   a.foto {
     background: #0097CE;
@@ -123,6 +123,26 @@
     margin-bottom: 3px;
   }
   a.foto:hover { background: #0079a6; }
+
+  .tokenbox{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .tokenbox input{
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    min-width: 200px;
+  }
+  .pill{
+    background: rgba(255,255,255,.22);
+    border: 1px solid rgba(255,255,255,.30);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
 </style>
 </head>
 
@@ -152,14 +172,23 @@
     <div class="pager-left">
       <button class="btn btn-outline" id="btnAnterior">⬅️ Anterior</button>
       <button class="btn btn-outline" id="btnProximo">Próximo ➡️</button>
-      <span id="infoPagina" style="font-weight:700;">Página 1</span>
+      <span id="infoPagina" class="pill">Página 1</span>
+      <span id="infoSelecao" class="pill">0 selecionado(s)</span>
     </div>
 
-    <div class="pager-right" style="gap:10px; display:flex; align-items:center; flex-wrap:wrap;">
-  <input id="adminToken" type="password" placeholder="Token admin" style="min-width:180px;" />
-  <button class="btn btn-outline" id="btnExcluirSelecionados">🗑️ Excluir selecionados</button>
-  <span id="status" class="status"><i class="bi bi-check2-square"></i> Pronto</span>
-</div>
+    <div class="pager-right">
+      <div class="tokenbox">
+        <input id="adminToken" type="password" placeholder="Token admin" />
+        <button class="btn btn-outline" id="btnMostrarToken" type="button" title="Mostrar/ocultar">
+          <i class="bi bi-eye"></i>
+        </button>
+        <button class="btn btn-outline" id="btnSalvarToken" type="button">Salvar</button>
+        <button class="btn btn-outline" id="btnLimparToken" type="button">Limpar</button>
+        <button class="btn btn-danger" id="btnExcluirSelecionados" type="button">🗑️ Excluir selecionados</button>
+      </div>
+
+      <span id="status" class="status"><i class="bi bi-check2-square"></i> Pronto</span>
+    </div>
   </div>
 </div>
 
@@ -171,31 +200,30 @@
   <div class="table-container" id="tableScroll">
     <table id="tabela">
       <thead>
-      <tr>
-        <th>Excluir</th>
-        <th>Data</th>
-        <th>Equipe</th>
-        <th>Base</th>
-        <th>Regional</th>
-        <th>Componente</th>
-        <th>Serviço</th>
-        <th>Endereço</th>
-        <th>GPS</th>
-        <th>Condutor</th>
-        <th>Alma de Aço</th>
-        <th>Acesso Caminhão</th>
-        <th>Observação</th>
-        <th>Fotos</th>
-        <th>OS</th>
-      </tr>
-    </thead>
+        <tr>
+          <th style="text-align:center;">Excluir</th>
+          <th>Data</th>
+          <th>Equipe</th>
+          <th>Base</th>
+          <th>Regional</th>
+          <th>Componente</th>
+          <th>Serviço</th>
+          <th>Endereço</th>
+          <th>GPS</th>
+          <th>Condutor</th>
+          <th>Alma de Aço</th>
+          <th>Acesso Caminhão</th>
+          <th>Observação</th>
+          <th>Fotos</th>
+          <th>OS</th>
+        </tr>
+      </thead>
       <tbody></tbody>
     </table>
   </div>
 </div>
 
 <script>
-  const selectedIds = new Set();
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
 
 let itensPagina = [];
@@ -206,6 +234,37 @@ let cursorHistory = [];
 
 const setBases = new Set();
 const setRegionais = new Set();
+const selectedIds = new Set();
+
+// =====================
+// TOKEN (localStorage)
+// =====================
+const TOKEN_KEY = "LL_ADMIN_TOKEN";
+const tokenInput = document.getElementById("adminToken");
+
+function loadToken(){
+  const t = localStorage.getItem(TOKEN_KEY) || "";
+  tokenInput.value = t;
+}
+function saveToken(){
+  localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
+  alert("Token salvo no navegador.");
+}
+function clearToken(){
+  localStorage.removeItem(TOKEN_KEY);
+  tokenInput.value = "";
+  alert("Token removido do navegador.");
+}
+document.getElementById("btnSalvarToken").addEventListener("click", saveToken);
+document.getElementById("btnLimparToken").addEventListener("click", clearToken);
+document.getElementById("btnMostrarToken").addEventListener("click", () => {
+  tokenInput.type = (tokenInput.type === "password") ? "text" : "password";
+});
+loadToken();
+
+function updateSelecaoUI(){
+  document.getElementById("infoSelecao").innerText = `${selectedIds.size} selecionado(s)`;
+}
 
 function setStatus(msg, ok=true){
   const el = document.getElementById("status");
@@ -293,8 +352,7 @@ function atualizarTabela(){
     .filter(r => !filtroReg  || r.regional === filtroReg);
 
   filtrados.forEach(reg => {
-    const tr = document.createElement("tr"); // ✅ CRIA A LINHA
-
+    const tr = document.createElement("tr");
     const checked = selectedIds.has(reg.id) ? "checked" : "";
 
     tr.innerHTML = `
@@ -333,31 +391,29 @@ function atualizarTabela(){
 
     tbody.appendChild(tr);
 
-    // ✅ EVENTO DO CHECKBOX (TEM QUE SER DENTRO DO forEach)
     const cb = tr.querySelector('input[type="checkbox"][data-id]');
     cb.addEventListener("change", (e) => {
       const id = e.target.getAttribute("data-id");
       if (!id) return;
-
       if (e.target.checked) selectedIds.add(id);
       else selectedIds.delete(id);
-
-      document.getElementById("infoPagina").innerText =
-        `Página ${pageNumber} • ${filtrados.length} item(ns) na tela • ${selectedIds.size} selecionado(s)`;
+      updateSelecaoUI();
     });
   });
 
-  // texto padrão (se ninguém marcou nada ainda)
   document.getElementById("infoPagina").innerText =
-    `Página ${pageNumber} • ${filtrados.length} item(ns) na tela • ${selectedIds.size} selecionado(s)`;
+    `Página ${pageNumber} • ${filtrados.length} item(ns)`;
 
+  updateSelecaoUI();
   requestAnimationFrame(syncHorizontalScroll);
 }
 
-  
-  async function excluirSelecionados() {
-  const token = document.getElementById("adminToken").value.trim();
-  if (!token) return alert("Informe o Token admin.");
+// =====================
+// Excluir selecionados
+// =====================
+async function excluirSelecionados(){
+  const token = tokenInput.value.trim();
+  if (!token) return alert("Informe o Token admin (e clique Salvar se quiser).");
 
   const ids = [...selectedIds];
   if (!ids.length) return alert("Nenhum registro selecionado para excluir.");
@@ -365,7 +421,7 @@ function atualizarTabela(){
   const ok = confirm(`Tem certeza que deseja excluir ${ids.length} registro(s)? Essa ação não pode ser desfeita.`);
   if (!ok) return;
 
-  try {
+  try{
     setStatus("Excluindo...", true);
 
     const resp = await fetch(`${API_URL}/excluir`, {
@@ -379,23 +435,27 @@ function atualizarTabela(){
 
     const out = await resp.json().catch(() => ({}));
     if (!resp.ok || !out.ok) {
+      setStatus("Falha ao excluir", false);
       return alert(out.error || "Erro ao excluir.");
     }
 
     alert(`Excluídos: ${out.deleted}`);
     selectedIds.clear();
+    updateSelecaoUI();
     await carregarPaginaAtual();
-  } catch (e) {
+  } catch (e){
     console.error(e);
+    setStatus("Erro de conexão", false);
     alert("Erro ao conectar com o servidor.");
   } finally {
     setStatus("Pronto", true);
   }
 }
+document.getElementById("btnExcluirSelecionados").addEventListener("click", excluirSelecionados);
 
-document.getElementById("btnExcluirSelecionados")
-  .addEventListener("click", excluirSelecionados);
-
+// =====================
+// Gerar SS
+// =====================
 async function gerarSS(id){
   const numero = prompt("Digite o número da SS:");
   if (!numero) return alert("SS não informada.");
@@ -456,6 +516,8 @@ async function primeiraPagina(){
   currentCursor = null;
   nextCursor = null;
   cursorHistory = [];
+  selectedIds.clear();
+  updateSelecaoUI();
   await carregarPaginaAtual();
 }
 
