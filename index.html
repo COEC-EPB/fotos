@@ -149,7 +149,7 @@
 <body>
 
 <div class="header">
-  <h2>📋 Registros Linha Viva</h2>
+  <h2>📋 Registros Serviços de Manutenção</h2>
 
   <div class="filtros">
     <input type="date" id="filtroData" />
@@ -507,16 +507,16 @@ function getLimit(){
 
 async function fetchPage(cursor){
   const limit = getLimit();
+  const status = document.getElementById("filtroStatus").value || "pendentes";
+
   const qs = new URLSearchParams();
   qs.set("limit", String(limit));
+  qs.set("status", status);
   if (cursor) qs.set("cursor", cursor);
 
   const resp = await fetch(`${API_URL}/listar?${qs.toString()}`);
   if (!resp.ok) throw new Error("Falha ao listar");
   return resp.json();
-  const status = document.getElementById("filtroStatus").value || "pendentes";
-qs.set("status", status);
-  
 }
 
 async function carregarPaginaAtual(){
@@ -602,6 +602,8 @@ async function primeiraPagina(){
 }
 
   document.getElementById("filtroStatus").addEventListener("change", async ()=>{
+  selectedIds.clear();
+  updateSelecaoUI();
   await primeiraPagina();
 });
 
@@ -639,4 +641,5 @@ primeiraPagina().then(() => {
 </script>
 
 </body>
+  <input id="fileConclusao" type="file" accept="image/*" style="display:none;" />
 </html>
