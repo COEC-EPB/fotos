@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Registros Linha Viva</title>
+<title>Registros Serviços de manutenção</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
@@ -160,6 +160,13 @@
       <option value="">Filtrar por Regional</option>
     </select>
 
+    <select id="filtroStatus">
+  <option value="pendentes" selected>Pendentes</option>
+  <option value="concluidos">Concluídos</option>
+  <option value="todos">Todos</option>
+</select>
+
+
     <select id="itensPorPagina">
       <option value="25">25 / página</option>
       <option value="50" selected>50 / página</option>
@@ -216,6 +223,7 @@
           <th>Observação</th>
           <th>Fotos</th>
           <th>OS</th>
+          <th>Concluído?</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -393,6 +401,15 @@ function atualizarTabela(){
             : `<button onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
         }
       </td>
+      <td style="text-align:center; font-weight:700;">
+  ${
+    reg.concluido
+      ? `<span style="color:green;">✅ Concluído</span>
+         ${reg.concluidoObs ? `<div style="font-weight:500; font-size:12px; color:#1f3b2c; margin-top:4px; max-width:220px; white-space:normal;">${reg.concluidoObs}</div>` : ""}
+         ${reg.concluidoFoto ? `<div style="margin-top:6px;"><a class="foto" href="${API_URL}/foto/${encodeURIComponent(reg.concluidoFoto)}" target="_blank">📷 Foto</a></div>` : ""}`
+      : `<button onclick="concluirRegistro('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#198754;color:white;cursor:pointer;">Concluir</button>`
+  }
+</td>
     `;
 
     tbody.appendChild(tr);
@@ -497,6 +514,9 @@ async function fetchPage(cursor){
   const resp = await fetch(`${API_URL}/listar?${qs.toString()}`);
   if (!resp.ok) throw new Error("Falha ao listar");
   return resp.json();
+  const status = document.getElementById("filtroStatus").value || "pendentes";
+qs.set("status", status);
+  
 }
 
 async function carregarPaginaAtual(){
@@ -526,6 +546,64 @@ async function primeiraPagina(){
   updateSelecaoUI();
   await carregarPaginaAtual();
 }
+  async function concluirRegistro(id){
+  const token = tokenInput.value.trim();
+  if (!token) return alert("Informe o Token admin.");
+
+  const obs = prompt("Observação do que foi concluído (opcional):") || "";
+
+  const querFoto = confirm("Deseja anexar uma FOTO da conclusão?");
+  let file = null;
+
+  if (querFoto) {
+    const input = document.getElementById("fileConclusao");
+    input.value = "";
+    input.click();
+
+    file = await new Promise((resolve) => {
+      input.onchange = () => resolve(input.files && input.files[0] ? input.files[0] : null);
+      // se a pessoa cancelar
+      setTimeout(() => resolve(null), 60000);
+    });
+  }
+
+  const ok = confirm("Confirmar conclusão deste registro?");
+  if (!ok) return;
+
+  try{
+    setStatus("Salvando conclusão...", true);
+
+    const fd = new FormData();
+    fd.append("id", id);
+    fd.append("observacao", obs);
+    if (file) fd.append("arquivo", file);
+
+    const resp = await fetch(`${API_URL}/concluir`, {
+      method: "POST",
+      headers: { "x-admin-token": token },
+      body: fd
+    });
+
+    const out = await resp.json().catch(() => ({}));
+    if (!resp.ok || !out.ok) {
+      setStatus("Falha ao concluir", false);
+      return alert(out.error || "Erro ao concluir.");
+    }
+
+    alert("Registro marcado como concluído!");
+    await carregarPaginaAtual();
+  } catch(e){
+    console.error(e);
+    setStatus("Erro de conexão", false);
+    alert("Erro ao conectar com o servidor.");
+  } finally {
+    setStatus("Pronto", true);
+  }
+}
+
+  document.getElementById("filtroStatus").addEventListener("change", async ()=>{
+  await primeiraPagina();
+});
 
 document.getElementById("btnProximo").addEventListener("click", async ()=>{
   if (!nextCursor) return;
