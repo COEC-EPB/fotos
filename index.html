@@ -161,11 +161,10 @@
     </select>
 
     <select id="filtroStatus">
-  <option value="pendentes" selected>Pendentes</option>
-  <option value="concluidos">Concluídos</option>
-  <option value="todos">Todos</option>
-</select>
-
+      <option value="pendentes" selected>Pendentes</option>
+      <option value="concluidos">Concluídos</option>
+      <option value="todos">Todos</option>
+    </select>
 
     <select id="itensPorPagina">
       <option value="25">25 / página</option>
@@ -230,6 +229,9 @@
     </table>
   </div>
 </div>
+
+<!-- ✅ TEM QUE FICAR DENTRO DO BODY -->
+<input id="fileConclusao" type="file" accept="image/*" style="display:none;" />
 
 <script>
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
@@ -373,12 +375,12 @@ function atualizarTabela(){
       <td>${reg.regional || "-"}</td>
       <td>${reg.componente || "-"}</td>
       <td>
-  ${
-    (reg.tipo_servico || "") === "LINHA_MORTA"
-      ? `LM • ${reg.tipo_rede || "-"} • ${reg.servico_lm || "-"}`
-      : `LV • ${reg.servicoll || "-"}`
-  }
-</td>
+        ${
+          (reg.tipo_servico || "") === "LINHA_MORTA"
+            ? `LM • ${reg.tipo_rede || "-"} • ${reg.servico_lm || "-"}`
+            : `LV • ${reg.servicoll || "-"}`
+        }
+      </td>
       <td>${reg.endereco || "-"}</td>
       <td>${reg.gps || "-"}</td>
       <td>${reg.condutor || "-"}</td>
@@ -402,14 +404,14 @@ function atualizarTabela(){
         }
       </td>
       <td style="text-align:center; font-weight:700;">
-  ${
-    reg.concluido
-      ? `<span style="color:green;">✅ Concluído</span>
-         ${reg.concluidoObs ? `<div style="font-weight:500; font-size:12px; color:#1f3b2c; margin-top:4px; max-width:220px; white-space:normal;">${reg.concluidoObs}</div>` : ""}
-         ${reg.concluidoFoto ? `<div style="margin-top:6px;"><a class="foto" href="${API_URL}/foto/${encodeURIComponent(reg.concluidoFoto)}" target="_blank">📷 Foto</a></div>` : ""}`
-      : `<button onclick="concluirRegistro('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#198754;color:white;cursor:pointer;">Concluir</button>`
-  }
-</td>
+        ${
+          reg.concluido
+            ? `<span style="color:green;">✅ Concluído</span>
+               ${reg.concluidoObs ? `<div style="font-weight:500; font-size:12px; color:#1f3b2c; margin-top:4px; max-width:220px; white-space:normal;">${reg.concluidoObs}</div>` : ""}
+               ${reg.concluidoFotoUrl ? `<div style="margin-top:6px;"><a class="foto" href="${reg.concluidoFotoUrl}" target="_blank">📷 Foto</a></div>` : ""}`
+            : `<button onclick="concluirRegistro('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#198754;color:white;cursor:pointer;">Concluir</button>`
+        }
+      </td>
     `;
 
     tbody.appendChild(tr);
@@ -546,26 +548,31 @@ async function primeiraPagina(){
   updateSelecaoUI();
   await carregarPaginaAtual();
 }
-  async function concluirRegistro(id){
+
+// =====================
+// ✅ CONCLUIR (abre seletor de foto)
+// =====================
+function selecionarFotoConclusao(){
+  const input = document.getElementById("fileConclusao");
+  if (!input) return Promise.resolve(null);
+
+  return new Promise((resolve) => {
+    input.value = "";
+    input.onchange = () => resolve(input.files && input.files[0] ? input.files[0] : null);
+
+    // ajuda alguns navegadores
+    input.focus();
+    input.click();
+  });
+}
+
+async function concluirRegistro(id){
   const token = tokenInput.value.trim();
   if (!token) return alert("Informe o Token admin.");
 
   const obs = prompt("Observação do que foi concluído (opcional):") || "";
-
   const querFoto = confirm("Deseja anexar uma FOTO da conclusão?");
-  let file = null;
-
-  if (querFoto) {
-    const input = document.getElementById("fileConclusao");
-    input.value = "";
-    input.click();
-
-    file = await new Promise((resolve) => {
-      input.onchange = () => resolve(input.files && input.files[0] ? input.files[0] : null);
-      // se a pessoa cancelar
-      setTimeout(() => resolve(null), 60000);
-    });
-  }
+  const file = querFoto ? await selecionarFotoConclusao() : null;
 
   const ok = confirm("Confirmar conclusão deste registro?");
   if (!ok) return;
@@ -578,6 +585,7 @@ async function primeiraPagina(){
     fd.append("observacao", obs);
     if (file) fd.append("arquivo", file);
 
+    // ⚠️ 404 = seu Worker NÃO tem /concluir ainda.
     const resp = await fetch(`${API_URL}/concluir`, {
       method: "POST",
       headers: { "x-admin-token": token },
@@ -587,7 +595,7 @@ async function primeiraPagina(){
     const out = await resp.json().catch(() => ({}));
     if (!resp.ok || !out.ok) {
       setStatus("Falha ao concluir", false);
-      return alert(out.error || "Erro ao concluir.");
+      return alert(out.error || `Erro ao concluir (HTTP ${resp.status}).`);
     }
 
     alert("Registro marcado como concluído!");
@@ -601,7 +609,7 @@ async function primeiraPagina(){
   }
 }
 
-  document.getElementById("filtroStatus").addEventListener("change", async ()=>{
+document.getElementById("filtroStatus").addEventListener("change", async ()=>{
   selectedIds.clear();
   updateSelecaoUI();
   await primeiraPagina();
@@ -641,5 +649,4 @@ primeiraPagina().then(() => {
 </script>
 
 </body>
-  <input id="fileConclusao" type="file" accept="image/*" style="display:none;" />
 </html>
