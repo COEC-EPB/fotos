@@ -172,6 +172,12 @@
       <option value="100">100 / página</option>
       <option value="200">200 / página</option>
     </select>
+
+    <select id="filtroTipo">
+  <option value="">LM + LV</option>
+  <option value="LINHA_MORTA">Somente LM</option>
+  <option value="LINHA_VIVA">Somente LV</option>
+</select>
   </div>
 
   <div class="pagerbar">
@@ -535,10 +541,14 @@ function getLimit(){
 async function fetchPage(cursor){
   const limit = getLimit();
   const status = document.getElementById("filtroStatus").value || "pendentes";
+  const tipo = document.getElementById("filtroTipo").value || "";
 
   const qs = new URLSearchParams();
   qs.set("limit", String(limit));
   qs.set("status", status);
+
+  if (tipo) qs.set("tipo", tipo); // 👈 NOVO
+
   if (cursor) qs.set("cursor", cursor);
 
   const resp = await fetch(`${API_URL}/listar?${qs.toString()}`);
@@ -685,6 +695,10 @@ document.getElementById("filtroBase").addEventListener("change", atualizarTabela
 document.getElementById("filtroRegional").addEventListener("change", atualizarTabela);
 
 document.getElementById("itensPorPagina").addEventListener("change", async ()=>{
+  await primeiraPagina();
+});
+
+  document.getElementById("filtroTipo").addEventListener("change", async ()=>{
   await primeiraPagina();
 });
 
