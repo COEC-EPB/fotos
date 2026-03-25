@@ -110,7 +110,6 @@
   tbody tr:nth-child(odd) { background: #ffffff; }
 
   td, th { white-space: nowrap; }
-  /* Observação (ajuste se mudar coluna) */
   td:nth-child(13) { white-space: normal; max-width: 260px; }
 
   a.foto {
@@ -136,6 +135,7 @@
     border: none;
     min-width: 200px;
   }
+
   .pill{
     background: rgba(255,255,255,.22);
     border: 1px solid rgba(255,255,255,.30);
@@ -144,10 +144,9 @@
     font-weight: 700;
   }
 
-  /* ====== DIFERENÇA VISUAL LM x LV ====== */
   tbody tr{ position: relative; }
-  tbody tr.lv { box-shadow: inset 6px 0 0 #0d6efd; }   /* azul */
-  tbody tr.lm { box-shadow: inset 6px 0 0 #F36F21; }   /* laranja */
+  tbody tr.lv { box-shadow: inset 6px 0 0 #0d6efd; }
+  tbody tr.lm { box-shadow: inset 6px 0 0 #F36F21; }
   tbody tr:hover.lv { box-shadow: inset 6px 0 0 #0b5ed7; }
   tbody tr:hover.lm { box-shadow: inset 6px 0 0 #c14e0f; }
 
@@ -161,16 +160,17 @@
     border-radius: 999px;
     border: 1px solid rgba(0,0,0,.10);
   }
+
   .badge-lv {
     background: rgba(13,110,253,.12);
     color: #0b5ed7;
   }
+
   .badge-lm {
     background: rgba(243,111,33,.14);
     color: #c14e0f;
   }
 
-  /* modal */
   #modalConclusao{
     display:none;
     position:fixed;
@@ -180,6 +180,7 @@
     align-items:center;
     justify-content:center;
   }
+
   #modalConclusao .box{
     background:#fff;
     width:min(560px,92vw);
@@ -206,21 +207,18 @@
       <option value="">Filtrar por Regional</option>
     </select>
 
-    <!-- ✅ filtro pendentes/concluídos -->
     <select id="filtroStatus">
       <option value="pendentes" selected>Pendentes</option>
       <option value="concluidos">Concluídos</option>
       <option value="todos">Todos</option>
     </select>
 
-    <!-- ✅ filtro LV/LM -->
     <select id="filtroTipo">
       <option value="todos" selected>LV + LM</option>
       <option value="LINHA_VIVA">Somente LV</option>
       <option value="LINHA_MORTA">Somente LM</option>
     </select>
 
-    <!-- ✅ filtro "inteligente" por OS (aceita parcial, ignora letras/símbolos) -->
     <input id="filtroOS" placeholder="Buscar OS (ex: 123, OS 00123...)" />
 
     <select id="itensPorPagina">
@@ -287,10 +285,8 @@
   </div>
 </div>
 
-<!-- input oculto (se precisar em algum navegador, mas o modal já tem input próprio) -->
 <input id="fileConclusao" type="file" accept="image/*" style="display:none;" />
 
-<!-- ✅ MODAL CONCLUSÃO (observação + foto opcional) -->
 <div id="modalConclusao">
   <div class="box">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
@@ -317,6 +313,7 @@
 
 <script>
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
+const DEFAULT_PAGE_SIZE = 50;
 
 let itensPagina = [];
 let pageNumber = 1;
@@ -328,40 +325,89 @@ const setBases = new Set();
 const setRegionais = new Set();
 const selectedIds = new Set();
 
+let conclIdAtual = null;
+
 // =====================
-// TOKEN (localStorage)
+// CACHE DE ELEMENTOS
+// =====================
+const el = {
+  filtroData: document.getElementById("filtroData"),
+  filtroBase: document.getElementById("filtroBase"),
+  filtroRegional: document.getElementById("filtroRegional"),
+  filtroStatus: document.getElementById("filtroStatus"),
+  filtroTipo: document.getElementById("filtroTipo"),
+  filtroOS: document.getElementById("filtroOS"),
+  itensPorPagina: document.getElementById("itensPorPagina"),
+
+  btnAnterior: document.getElementById("btnAnterior"),
+  btnProximo: document.getElementById("btnProximo"),
+  infoPagina: document.getElementById("infoPagina"),
+  infoSelecao: document.getElementById("infoSelecao"),
+  status: document.getElementById("status"),
+
+  adminToken: document.getElementById("adminToken"),
+  btnMostrarToken: document.getElementById("btnMostrarToken"),
+  btnSalvarToken: document.getElementById("btnSalvarToken"),
+  btnLimparToken: document.getElementById("btnLimparToken"),
+  btnExcluirSelecionados: document.getElementById("btnExcluirSelecionados"),
+
+  tabela: document.getElementById("tabela"),
+  tbody: document.querySelector("#tabela tbody"),
+  tableScroll: document.getElementById("tableScroll"),
+  hscrollTop: document.getElementById("hscrollTop"),
+  hscrollSpacer: document.getElementById("hscrollSpacer"),
+
+  modalConclusao: document.getElementById("modalConclusao"),
+  btnFecharConclusao: document.getElementById("btnFecharConclusao"),
+  btnConfirmarConclusao: document.getElementById("btnConfirmarConclusao"),
+  conclObs: document.getElementById("conclObs"),
+  conclFoto: document.getElementById("conclFoto"),
+  conclFotoInfo: document.getElementById("conclFotoInfo"),
+};
+
+el.itensPorPagina.value = String(DEFAULT_PAGE_SIZE);
+
+// =====================
+// TOKEN
 // =====================
 const TOKEN_KEY = "LL_ADMIN_TOKEN";
-const tokenInput = document.getElementById("adminToken");
 
 function loadToken(){
   const t = localStorage.getItem(TOKEN_KEY) || "";
-  tokenInput.value = t;
+  el.adminToken.value = t;
 }
+
 function saveToken(){
-  localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
+  localStorage.setItem(TOKEN_KEY, el.adminToken.value.trim());
   alert("Token salvo no navegador.");
 }
+
 function clearToken(){
   localStorage.removeItem(TOKEN_KEY);
-  tokenInput.value = "";
+  el.adminToken.value = "";
   alert("Token removido do navegador.");
 }
-document.getElementById("btnSalvarToken").addEventListener("click", saveToken);
-document.getElementById("btnLimparToken").addEventListener("click", clearToken);
-document.getElementById("btnMostrarToken").addEventListener("click", () => {
-  tokenInput.type = (tokenInput.type === "password") ? "text" : "password";
+
+el.btnSalvarToken.addEventListener("click", saveToken);
+el.btnLimparToken.addEventListener("click", clearToken);
+el.btnMostrarToken.addEventListener("click", () => {
+  el.adminToken.type = (el.adminToken.type === "password") ? "text" : "password";
 });
+
 loadToken();
 
+// =====================
+// UTIL
+// =====================
 function updateSelecaoUI(){
-  document.getElementById("infoSelecao").innerText = `${selectedIds.size} selecionado(s)`;
+  el.infoSelecao.innerText = `${selectedIds.size} selecionado(s)`;
 }
 
-function setStatus(msg, ok=true){
-  const el = document.getElementById("status");
-  el.style.color = ok ? "#0f5132" : "#842029";
-  el.innerHTML = (ok ? `<i class="bi bi-check2-square"></i>` : `<i class="bi bi-exclamation-triangle"></i>`) + " " + msg;
+function setStatus(msg, ok = true){
+  el.status.style.color = ok ? "#0f5132" : "#842029";
+  el.status.innerHTML = (ok
+    ? `<i class="bi bi-check2-square"></i>`
+    : `<i class="bi bi-exclamation-triangle"></i>`) + " " + msg;
 }
 
 function formatarData(dataISO) {
@@ -374,174 +420,176 @@ function onlyDigits(s){
   return String(s || "").replace(/\D+/g, "");
 }
 
-function syncHorizontalScroll(){
-  const top = document.getElementById("hscrollTop");
-  const spacer = document.getElementById("hscrollSpacer");
-  const tableScroll = document.getElementById("tableScroll");
-  const table = document.getElementById("tabela");
-  if (!top || !spacer || !tableScroll || !table) return;
-
-  spacer.style.width = (table.scrollWidth || 0) + "px";
-
-  if (!top.dataset.bound) {
-    let syncing = false;
-
-    top.addEventListener("scroll", () => {
-      if (syncing) return;
-      syncing = true;
-      tableScroll.scrollLeft = top.scrollLeft;
-      syncing = false;
-    });
-
-    tableScroll.addEventListener("scroll", () => {
-      if (syncing) return;
-      syncing = true;
-      top.scrollLeft = tableScroll.scrollLeft;
-      syncing = false;
-    });
-
-    top.dataset.bound = "1";
-  }
+function escapeHtml(str){
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
+function getLimit(){
+  const v = parseInt(el.itensPorPagina.value || String(DEFAULT_PAGE_SIZE), 10);
+  return Math.min(Math.max(v, 1), 200);
+}
+
+// =====================
+// SCROLL HORIZONTAL
+// =====================
+function syncHorizontalScroll(){
+  el.hscrollSpacer.style.width = (el.tabela.scrollWidth || 0) + "px";
+}
+
+(function bindHorizontalScroll(){
+  let syncing = false;
+
+  el.hscrollTop.addEventListener("scroll", () => {
+    if (syncing) return;
+    syncing = true;
+    el.tableScroll.scrollLeft = el.hscrollTop.scrollLeft;
+    syncing = false;
+  });
+
+  el.tableScroll.addEventListener("scroll", () => {
+    if (syncing) return;
+    syncing = true;
+    el.hscrollTop.scrollLeft = el.tableScroll.scrollLeft;
+    syncing = false;
+  });
+})();
+
+// =====================
+// FILTROS
+// =====================
 function preencherFiltrosIncremental(lista){
-  const baseSel = document.getElementById("filtroBase");
-  const regSel = document.getElementById("filtroRegional");
+  const baseAtual = el.filtroBase.value;
+  const regAtual = el.filtroRegional.value;
 
   for (const r of lista){
     if (r.base) setBases.add(r.base);
     if (r.regional) setRegionais.add(r.regional);
   }
 
-  const baseAtual = baseSel.value;
-  const regAtual = regSel.value;
+  const basesOrdenadas = [...setBases].sort();
+  const regionaisOrdenadas = [...setRegionais].sort();
 
-  baseSel.innerHTML = `<option value="">Filtrar por Base</option>`;
-  [...setBases].sort().forEach(b=>{
+  el.filtroBase.innerHTML = `<option value="">Filtrar por Base</option>`;
+  for (const b of basesOrdenadas){
     const opt = document.createElement("option");
-    opt.value = b; opt.textContent = b;
-    baseSel.appendChild(opt);
-  });
+    opt.value = b;
+    opt.textContent = b;
+    el.filtroBase.appendChild(opt);
+  }
 
-  regSel.innerHTML = `<option value="">Filtrar por Regional</option>`;
-  [...setRegionais].sort().forEach(r=>{
+  el.filtroRegional.innerHTML = `<option value="">Filtrar por Regional</option>`;
+  for (const r of regionaisOrdenadas){
     const opt = document.createElement("option");
-    opt.value = r; opt.textContent = r;
-    regSel.appendChild(opt);
-  });
+    opt.value = r;
+    opt.textContent = r;
+    el.filtroRegional.appendChild(opt);
+  }
 
-  baseSel.value = baseAtual;
-  regSel.value = regAtual;
+  el.filtroBase.value = baseAtual;
+  el.filtroRegional.value = regAtual;
 }
 
-function atualizarTabela(){
-  const tbody = document.querySelector("#tabela tbody");
-  tbody.innerHTML = "";
+function obterFiltrados(){
+  const filtroData = el.filtroData.value;
+  const filtroBase = el.filtroBase.value;
+  const filtroReg = el.filtroRegional.value;
+  const filtroTipo = el.filtroTipo.value || "todos";
 
-  const filtroData = document.getElementById("filtroData").value;
-  const filtroBase = document.getElementById("filtroBase").value;
-  const filtroReg  = document.getElementById("filtroRegional").value;
-
-  const filtroTipo = document.getElementById("filtroTipo").value || "todos";
-
-  // OS "inteligente": ignora letras/símbolos e faz match parcial
-  const osBuscaRaw = (document.getElementById("filtroOS").value || "").trim();
+  const osBuscaRaw = (el.filtroOS.value || "").trim();
   const osBuscaDig = onlyDigits(osBuscaRaw);
 
-  const filtrados = itensPagina
+  return itensPagina
     .filter(r => !filtroData || String(r.data || "").startsWith(filtroData))
     .filter(r => !filtroBase || r.base === filtroBase)
-    .filter(r => !filtroReg  || r.regional === filtroReg)
+    .filter(r => !filtroReg || r.regional === filtroReg)
     .filter(r => {
       if (filtroTipo === "todos") return true;
-      const t = String(r.tipo_servico || "").toUpperCase();
-      return t === filtroTipo;
+      return String(r.tipo_servico || "").toUpperCase() === filtroTipo;
     })
     .filter(r => {
       if (!osBuscaRaw) return true;
-
       const ss = String(r.ssNumero || "");
       const ssDig = onlyDigits(ss);
 
-      // se o usuário digitou números, compara números (parcial)
       if (osBuscaDig) return ssDig.includes(osBuscaDig);
-
-      // senão compara texto normal (case-insensitive)
       return ss.toLowerCase().includes(osBuscaRaw.toLowerCase());
     });
+}
 
-  filtrados.forEach(reg => {
+// =====================
+// TABELA
+// =====================
+function atualizarTabela(){
+  const filtrados = obterFiltrados();
+  const frag = document.createDocumentFragment();
+
+  el.tbody.innerHTML = "";
+
+  for (const reg of filtrados){
     const tr = document.createElement("tr");
     const checked = selectedIds.has(reg.id) ? "checked" : "";
 
     const tipo = String(reg.tipo_servico || "").toUpperCase();
-    const ehLM = (tipo === "LINHA_MORTA");
-    tr.classList.add(ehLM ? "lm" : "lv");
+    const ehLM = tipo === "LINHA_MORTA";
+    tr.className = ehLM ? "lm" : "lv";
 
     const labelBadge = ehLM
       ? `<span class="badge-serv badge-lm">🟠 LM</span>`
       : `<span class="badge-serv badge-lv">🔵 LV</span>`;
 
     const textoServico = ehLM
-      ? `${reg.tipo_rede || "-"} • ${reg.servico_lm || "-"}`
-      : `${reg.servicoll || "-"}`;
+      ? `${escapeHtml(reg.tipo_rede || "-")} • ${escapeHtml(reg.servico_lm || "-")}`
+      : `${escapeHtml(reg.servicoll || "-")}`;
 
     const conclFotoUrl = reg.concluidoFoto
       ? `${API_URL}/foto/${encodeURIComponent(reg.concluidoFoto)}`
       : "";
 
+    const fotosHtml = Array.isArray(reg.fotosUrl) && reg.fotosUrl.length
+      ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
+      : "-";
+
     tr.innerHTML = `
       <td style="text-align:center;">
-        <input type="checkbox" data-id="${reg.id}" ${checked} />
+        <input type="checkbox" data-id="${escapeHtml(reg.id)}" ${checked} />
       </td>
       <td>${formatarData(reg.data)}</td>
-      <td>${reg.equipe || "-"}</td>
-      <td>${reg.base || "-"}</td>
-      <td>${reg.regional || "-"}</td>
-      <td>${reg.componente || "-"}</td>
-
-      <td>
-        ${labelBadge}
-        <span style="margin-left:6px;">${textoServico}</span>
-      </td>
-
-      <td>${reg.endereco || "-"}</td>
-      <td>${reg.gps || "-"}</td>
-      <td>${reg.condutor || "-"}</td>
-      <td>${reg.almaaco || "-"}</td>
+      <td>${escapeHtml(reg.equipe || "-")}</td>
+      <td>${escapeHtml(reg.base || "-")}</td>
+      <td>${escapeHtml(reg.regional || "-")}</td>
+      <td>${escapeHtml(reg.componente || "-")}</td>
+      <td>${labelBadge}<span style="margin-left:6px;">${textoServico}</span></td>
+      <td>${escapeHtml(reg.endereco || "-")}</td>
+      <td>${escapeHtml(reg.gps || "-")}</td>
+      <td>${escapeHtml(reg.condutor || "-")}</td>
+      <td>${escapeHtml(reg.almaaco || "-")}</td>
       <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
-        ${reg.acessocaminhao || "-"}
+        ${escapeHtml(reg.acessocaminhao || "-")}
       </td>
-      <td>${reg.observacao || "-"}</td>
-
-      <td style="text-align:center;">
-        ${
-          reg.fotosUrl?.length
-            ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
-            : "-"
-        }
-      </td>
-
+      <td>${escapeHtml(reg.observacao || "-")}</td>
+      <td style="text-align:center;">${fotosHtml}</td>
       <td style="text-align:center; font-weight:bold;">
         ${
           reg.ssGerada && reg.ssNumero
-            ? `<span style="color:green;">OS Nº ${reg.ssNumero}</span>`
-            : `<button type="button" onclick="gerarSS('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
+            ? `<span style="color:green;">OS Nº ${escapeHtml(reg.ssNumero)}</span>`
+            : `<button type="button" onclick="gerarSS('${escapeHtml(reg.id)}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
         }
       </td>
-
       <td style="text-align:center; font-weight:700;">
         ${
           reg.concluido
             ? `<span style="color:green;">✅ Concluído</span>
-               ${reg.concluidoObs ? `<div style="font-weight:500; font-size:12px; color:#1f3b2c; margin-top:4px; max-width:220px; white-space:normal;">${reg.concluidoObs}</div>` : ""}
+               ${reg.concluidoObs ? `<div style="font-weight:500; font-size:12px; color:#1f3b2c; margin-top:4px; max-width:220px; white-space:normal;">${escapeHtml(reg.concluidoObs)}</div>` : ""}
                ${conclFotoUrl ? `<div style="margin-top:6px;"><a class="foto" href="${conclFotoUrl}" target="_blank">📷 Foto</a></div>` : ""}`
-            : `<button type="button" onclick="concluirRegistro('${reg.id}')" style="padding:6px 10px;border:none;border-radius:6px;background:#198754;color:white;cursor:pointer;">Concluir</button>`
+            : `<button type="button" onclick="concluirRegistro('${escapeHtml(reg.id)}')" style="padding:6px 10px;border:none;border-radius:6px;background:#198754;color:white;cursor:pointer;">Concluir</button>`
         }
       </td>
     `;
-
-    tbody.appendChild(tr);
 
     const cb = tr.querySelector('input[type="checkbox"][data-id]');
     cb.addEventListener("change", (e) => {
@@ -551,21 +599,23 @@ function atualizarTabela(){
       else selectedIds.delete(id);
       updateSelecaoUI();
     });
-  });
 
-  document.getElementById("infoPagina").innerText =
-    `Página ${pageNumber} • ${filtrados.length} item(ns)`;
+    frag.appendChild(tr);
+  }
 
+  el.tbody.appendChild(frag);
+  el.infoPagina.innerText = `Página ${pageNumber} • ${filtrados.length} item(ns)`;
   updateSelecaoUI();
+
   requestAnimationFrame(syncHorizontalScroll);
 }
 
 // =====================
-// Excluir selecionados
+// EXCLUIR
 // =====================
 async function excluirSelecionados(){
-  const token = tokenInput.value.trim();
-  if (!token) return alert("Informe o Token admin (e clique Salvar se quiser).");
+  const token = el.adminToken.value.trim();
+  if (!token) return alert("Informe o Token admin.");
 
   const ids = [...selectedIds];
   if (!ids.length) return alert("Nenhum registro selecionado para excluir.");
@@ -603,12 +653,13 @@ async function excluirSelecionados(){
     setStatus("Pronto", true);
   }
 }
-document.getElementById("btnExcluirSelecionados").addEventListener("click", excluirSelecionados);
+
+el.btnExcluirSelecionados.addEventListener("click", excluirSelecionados);
 
 // =====================
-// Gerar SS
+// GERAR SS
 // =====================
-async function gerarSS(id){
+window.gerarSS = async function(id){
   const numero = prompt("Digite o número da SS:");
   if (!numero) return alert("SS não informada.");
 
@@ -626,43 +677,47 @@ async function gerarSS(id){
     console.error(e);
     alert("Erro ao conectar com o servidor.");
   }
-}
+};
 
-function getLimit(){
-  const v = parseInt(document.getElementById("itensPorPagina").value || "50", 10);
-  return Math.min(Math.max(v, 1), 200);
-}
-
+// =====================
+// FETCH / PAGINAÇÃO
+// =====================
 async function fetchPage(cursor){
-  const limit = getLimit();
-  const status = document.getElementById("filtroStatus").value || "pendentes";
-
   const qs = new URLSearchParams();
-  qs.set("limit", String(limit));
-  qs.set("status", status);
+  qs.set("limit", String(getLimit()));
+  qs.set("status", el.filtroStatus.value || "pendentes");
   if (cursor) qs.set("cursor", cursor);
 
-  const resp = await fetch(`${API_URL}/listar?${qs.toString()}`);
+  const resp = await fetch(`${API_URL}/listar?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store"
+  });
+
   if (!resp.ok) throw new Error("Falha ao listar");
   return resp.json();
 }
 
 async function carregarPaginaAtual(){
-  setStatus("Carregando...", true);
+  try {
+    setStatus("Carregando...", true);
 
-  const payload = await fetchPage(currentCursor);
+    const payload = await fetchPage(currentCursor);
 
-  itensPagina = payload.items || [];
-  nextCursor = payload.nextCursor;
-  const hasMore = payload.hasMore === true;
+    itensPagina = payload.items || [];
+    nextCursor = payload.nextCursor || null;
+    const hasMore = payload.hasMore === true;
 
-  document.getElementById("btnAnterior").disabled = (pageNumber <= 1);
-  document.getElementById("btnProximo").disabled = !hasMore;
+    el.btnAnterior.disabled = (pageNumber <= 1);
+    el.btnProximo.disabled = !hasMore;
 
-  preencherFiltrosIncremental(itensPagina);
-  atualizarTabela();
+    preencherFiltrosIncremental(itensPagina);
+    atualizarTabela();
 
-  setStatus(`Carregado (${itensPagina.length} registro(s))`, true);
+    setStatus(`Carregado (${itensPagina.length} registro(s))`, true);
+  } catch (err) {
+    console.error(err);
+    setStatus("Erro ao carregar", false);
+  }
 }
 
 async function primeiraPagina(){
@@ -675,60 +730,47 @@ async function primeiraPagina(){
   await carregarPaginaAtual();
 }
 
-/* ==========================
-   MODAL CONCLUSÃO (OK)
-========================== */
-let conclIdAtual = null;
-
-const modalConclusao = document.getElementById("modalConclusao");
-const btnFecharConclusao = document.getElementById("btnFecharConclusao");
-const btnConfirmarConclusao = document.getElementById("btnConfirmarConclusao");
-const conclObs = document.getElementById("conclObs");
-const conclFoto = document.getElementById("conclFoto");
-const conclFotoInfo = document.getElementById("conclFotoInfo");
-
+// =====================
+// MODAL CONCLUSÃO
+// =====================
 function abrirModalConclusao(id){
   conclIdAtual = id;
-  conclObs.value = "";
-  conclFoto.value = "";
-  conclFotoInfo.textContent = "";
-  modalConclusao.style.display = "flex";
+  el.conclObs.value = "";
+  el.conclFoto.value = "";
+  el.conclFotoInfo.textContent = "";
+  el.modalConclusao.style.display = "flex";
 }
 
 function fecharModalConclusao(){
-  modalConclusao.style.display = "none";
+  el.modalConclusao.style.display = "none";
   conclIdAtual = null;
 }
 
-btnFecharConclusao.addEventListener("click", fecharModalConclusao);
-modalConclusao.addEventListener("click", (e) => {
-  if (e.target === modalConclusao) fecharModalConclusao(); // clique fora fecha
-});
-
-conclFoto.addEventListener("change", () => {
-  const f = conclFoto.files && conclFoto.files[0];
-  conclFotoInfo.textContent = f ? `Selecionado: ${f.name}` : "";
-});
-
-// chamada pelo botão "Concluir" na tabela
 window.concluirRegistro = function(id){
-  const token = tokenInput.value.trim();
+  const token = el.adminToken.value.trim();
   if (!token) return alert("Informe o Token admin.");
   abrirModalConclusao(id);
 };
 
-btnConfirmarConclusao.addEventListener("click", async () => {
-  const token = tokenInput.value.trim();
+el.btnFecharConclusao.addEventListener("click", fecharModalConclusao);
+
+el.modalConclusao.addEventListener("click", (e) => {
+  if (e.target === el.modalConclusao) fecharModalConclusao();
+});
+
+el.conclFoto.addEventListener("change", () => {
+  const f = el.conclFoto.files && el.conclFoto.files[0];
+  el.conclFotoInfo.textContent = f ? `Selecionado: ${f.name}` : "";
+});
+
+el.btnConfirmarConclusao.addEventListener("click", async () => {
+  const token = el.adminToken.value.trim();
   if (!token) return alert("Informe o Token admin.");
   if (!conclIdAtual) return;
 
-  const obs = (conclObs.value || "").trim();
-  const file = conclFoto.files && conclFoto.files[0] ? conclFoto.files[0] : null;
+  const obs = (el.conclObs.value || "").trim();
+  const file = el.conclFoto.files && el.conclFoto.files[0] ? el.conclFoto.files[0] : null;
 
-  // ✅ agora funciona com:
-  // - só observação (sem foto)
-  // - só foto (sem observação)
-  // - ambos
   const ok = confirm("Confirmar conclusão deste registro?");
   if (!ok) return;
 
@@ -764,16 +806,16 @@ btnConfirmarConclusao.addEventListener("click", async () => {
   }
 });
 
-/* ==========================
-   EVENTOS
-========================== */
-document.getElementById("filtroStatus").addEventListener("change", async ()=>{
+// =====================
+// EVENTOS
+// =====================
+el.filtroStatus.addEventListener("change", async () => {
   selectedIds.clear();
   updateSelecaoUI();
   await primeiraPagina();
 });
 
-document.getElementById("btnProximo").addEventListener("click", async ()=>{
+el.btnProximo.addEventListener("click", async () => {
   if (!nextCursor) return;
   cursorHistory.push(currentCursor);
   currentCursor = nextCursor;
@@ -781,32 +823,30 @@ document.getElementById("btnProximo").addEventListener("click", async ()=>{
   await carregarPaginaAtual();
 });
 
-document.getElementById("btnAnterior").addEventListener("click", async ()=>{
+el.btnAnterior.addEventListener("click", async () => {
   if (pageNumber <= 1) return;
   currentCursor = cursorHistory.pop() ?? null;
   pageNumber -= 1;
   await carregarPaginaAtual();
 });
 
-document.getElementById("filtroData").addEventListener("change", atualizarTabela);
-document.getElementById("filtroBase").addEventListener("change", atualizarTabela);
-document.getElementById("filtroRegional").addEventListener("change", atualizarTabela);
-document.getElementById("filtroTipo").addEventListener("change", atualizarTabela);
+el.filtroData.addEventListener("change", atualizarTabela);
+el.filtroBase.addEventListener("change", atualizarTabela);
+el.filtroRegional.addEventListener("change", atualizarTabela);
+el.filtroTipo.addEventListener("change", atualizarTabela);
+el.filtroOS.addEventListener("input", atualizarTabela);
 
-// busca OS “inteligente” enquanto digita
-document.getElementById("filtroOS").addEventListener("input", atualizarTabela);
-
-document.getElementById("itensPorPagina").addEventListener("change", async ()=>{
+el.itensPorPagina.addEventListener("change", async () => {
   await primeiraPagina();
 });
 
 window.addEventListener("resize", () => requestAnimationFrame(syncHorizontalScroll));
 
+// =====================
+// INÍCIO
+// =====================
 primeiraPagina().then(() => {
   requestAnimationFrame(syncHorizontalScroll);
-}).catch(err=>{
-  console.error(err);
-  setStatus("Erro ao carregar", false);
 });
 </script>
 
