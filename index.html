@@ -684,8 +684,28 @@ window.gerarSS = async function(id){
 // =====================
 async function fetchPage(cursor){
   const qs = new URLSearchParams();
+
   qs.set("limit", String(getLimit()));
   qs.set("status", el.filtroStatus.value || "pendentes");
+
+  const base = (el.filtroBase.value || "").trim();
+  const regional = (el.filtroRegional.value || "").trim();
+  const tipo = (el.filtroTipo.value || "").trim();
+  const data = (el.filtroData.value || "").trim();
+  const os = (el.filtroOS.value || "").trim();
+
+  if (base) qs.set("base", base);
+  if (regional) qs.set("regional", regional);
+  if (tipo && tipo !== "todos") qs.set("tipo", tipo);
+
+  // se escolher uma data específica, usa início=fim
+  if (data) {
+    qs.set("dataInicio", data);
+    qs.set("dataFim", data);
+  }
+
+  if (os) qs.set("os", os);
+
   if (cursor) qs.set("cursor", cursor);
 
   const resp = await fetch(`${API_URL}/listar?${qs.toString()}`, {
@@ -830,11 +850,29 @@ el.btnAnterior.addEventListener("click", async () => {
   await carregarPaginaAtual();
 });
 
-el.filtroData.addEventListener("change", atualizarTabela);
-el.filtroBase.addEventListener("change", atualizarTabela);
-el.filtroRegional.addEventListener("change", atualizarTabela);
-el.filtroTipo.addEventListener("change", atualizarTabela);
-el.filtroOS.addEventListener("input", atualizarTabela);
+el.filtroData.addEventListener("change", async () => {
+  await primeiraPagina();
+});
+
+el.filtroBase.addEventListener("change", async () => {
+  await primeiraPagina();
+});
+
+el.filtroRegional.addEventListener("change", async () => {
+  await primeiraPagina();
+});
+
+el.filtroTipo.addEventListener("change", async () => {
+  await primeiraPagina();
+});
+
+let osTimer = null;
+el.filtroOS.addEventListener("input", () => {
+  clearTimeout(osTimer);
+  osTimer = setTimeout(async () => {
+    await primeiraPagina();
+  }, 350);
+});
 
 el.itensPorPagina.addEventListener("change", async () => {
   await primeiraPagina();
