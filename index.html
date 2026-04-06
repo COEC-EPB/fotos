@@ -1,335 +1,867 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<title>Registros Serviços de manutenção</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <meta charset="UTF-8" />
+  <title>Registros Serviços de Manutenção</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-<style>
-  body { font-family: Arial, sans-serif; background: #e9eef3; margin: 0; padding: 0; }
+  <style>
+    :root{
+      --primary:#0097CE;
+      --primary-dark:#0077a3;
+      --primary-soft:#e8f6fc;
+      --orange:#F36F21;
+      --success:#198754;
+      --danger:#dc3545;
+      --danger-dark:#b42318;
+      --warning:#b26a00;
+      --bg:#eef3f8;
+      --surface:#ffffff;
+      --surface-2:#f8fbfd;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#d7e2ea;
+      --shadow:0 10px 28px rgba(15, 23, 42, .10);
+      --radius:18px;
+      --radius-sm:12px;
+    }
 
-  .header {
-    background: #0097CE;
-    padding: 20px;
-    color: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  }
-  .header h2 { margin: 0 0 10px; }
+    *{ box-sizing:border-box; }
 
-  .filtros {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-    align-items: end;
-  }
+    html, body{
+      margin:0;
+      padding:0;
+      background:linear-gradient(180deg,#edf4f9 0%, #f6f9fc 100%);
+      font-family:"Segoe UI", Arial, sans-serif;
+      color:var(--text);
+    }
 
-  .filtros input, .filtros select {
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    min-width: 180px;
-  }
+    body{
+      min-height:100vh;
+    }
 
-  .pagerbar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:space-between;
-    margin-top: 12px;
-  }
+    .app{
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 18px;
+    }
 
-  .pager-left, .pager-right{
-    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-  }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
 
-  .btn {
-    border: none;
-    border-radius: 6px;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .btn-outline{ background:#fff; color:#0d6efd; border:1px solid #0d6efd; }
-  .btn-danger{ background:#dc3545; color:#fff; border:1px solid #dc3545; }
-  .btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .hero{
+      flex:1;
+      min-width:280px;
+      background:linear-gradient(135deg, var(--primary) 0%, #0b86b6 100%);
+      color:#fff;
+      border-radius:24px;
+      padding:22px 24px;
+      box-shadow:0 18px 36px rgba(0, 151, 206, .22);
+      position:relative;
+      overflow:hidden;
+    }
 
-  .status{
-    font-weight:700;
-    margin: 12px 0 0;
-    color:#0f5132;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-40px;
+      top:-40px;
+      width:180px;
+      height:180px;
+      background:rgba(255,255,255,.10);
+      border-radius:50%;
+    }
 
-  .table-wrap {
-    background: white;
-    border-radius: 0;
-    width: 100%;
-    margin: 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-    overflow: hidden;
-  }
+    .hero h1{
+      margin:0 0 8px;
+      font-size:28px;
+      line-height:1.15;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
 
-  .hscroll-top {
-    overflow-x: auto;
-    overflow-y: hidden;
-    height: 12px;
-    border-bottom: 1px solid #dfe7ef;
-    background: #f7fbff;
-  }
-  .hscroll-top .spacer { height: 1px; }
+    .hero p{
+      margin:0;
+      opacity:.95;
+      font-size:14px;
+      max-width:720px;
+    }
 
-  .table-container {
-    max-height: 82vh;
-    overflow: auto;
-    background: white;
-  }
+    .hero-stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
 
-  thead th { position: sticky; top: 0; z-index: 2; }
-  thead { box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+    .hero-pill{
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.24);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:700;
+      font-size:13px;
+      backdrop-filter: blur(4px);
+    }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-    font-size: 14.5px;
-    line-height: 1.4;
-  }
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
 
-  th { background: #0097CE; color: white; padding: 14px 12px; font-size: 15px; }
-  td { border-bottom: 1px solid #ddd; padding: 14px 12px; font-size: 14.5px; }
-  td:last-child { background: #f5faff; }
+    .toolbar{
+      display:grid;
+      grid-template-columns: 1.35fr .95fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
 
-  tbody tr:hover td { background: #d9ecfb; }
-  tbody tr:nth-child(even) { background: #f7fbff; }
-  tbody tr:nth-child(odd) { background: #ffffff; }
+    .section{
+      padding:18px;
+    }
 
-  td, th { white-space: nowrap; }
-  td:nth-child(13) { white-space: normal; max-width: 260px; }
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
 
-  a.foto {
-    background: #0097CE;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    text-decoration: none;
-    display: inline-block;
-    margin-bottom: 3px;
-  }
-  a.foto:hover { background: #0079a6; }
+    .section-title h2{
+      margin:0;
+      font-size:18px;
+      color:#0f172a;
+    }
 
-  .tokenbox{
-    display:flex;
-    gap:8px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
-  .tokenbox input{
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    min-width: 200px;
-  }
+    .section-title small{
+      color:var(--muted);
+      display:block;
+      margin-top:3px;
+      font-size:12px;
+    }
 
-  .pill{
-    background: rgba(255,255,255,.22);
-    border: 1px solid rgba(255,255,255,.30);
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-weight: 700;
-  }
+    .filters-grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap:12px;
+    }
 
-  tbody tr{ position: relative; }
-  tbody tr.lv { box-shadow: inset 6px 0 0 #0d6efd; }
-  tbody tr.lm { box-shadow: inset 6px 0 0 #F36F21; }
-  tbody tr:hover.lv { box-shadow: inset 6px 0 0 #0b5ed7; }
-  tbody tr:hover.lm { box-shadow: inset 6px 0 0 #c14e0f; }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
 
-  .badge-serv {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 800;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 999px;
-    border: 1px solid rgba(0,0,0,.10);
-  }
+    .field label{
+      font-size:12px;
+      font-weight:700;
+      color:#475569;
+    }
 
-  .badge-lv {
-    background: rgba(13,110,253,.12);
-    color: #0b5ed7;
-  }
+    .input,
+    .select,
+    .token-input,
+    textarea,
+    input[type="file"]{
+      width:100%;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
+      font-size:14px;
+      transition:.18s ease;
+    }
 
-  .badge-lm {
-    background: rgba(243,111,33,.14);
-    color: #c14e0f;
-  }
+    .input:focus,
+    .select:focus,
+    .token-input:focus,
+    textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 4px rgba(0,151,206,.10);
+    }
 
-  #modalConclusao{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.45);
-    z-index:9999;
-    align-items:center;
-    justify-content:center;
-  }
+    .actions-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
 
-  #modalConclusao .box{
-    background:#fff;
-    width:min(560px,92vw);
-    border-radius:14px;
-    padding:18px;
-    box-shadow:0 10px 30px rgba(0,0,0,.35);
-  }
-</style>
+    .token-row{
+      display:grid;
+      grid-template-columns:1fr auto auto auto;
+      gap:8px;
+    }
+
+    .quick-info{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:10px;
+    }
+
+    .info-card{
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .info-card .label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      margin-bottom:4px;
+    }
+
+    .info-card .value{
+      font-size:20px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .info-card .sub{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .status-box{
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid #d2e7d9;
+      background:#edf9f0;
+      color:#166534;
+    }
+
+    .status-box.error{
+      border-color:#f0c7cb;
+      background:#fff2f3;
+      color:#842029;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+
+    .btn:hover{ transform:translateY(-1px); }
+
+    .btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+    }
+
+    .btn-primary:hover{ background:var(--primary-dark); }
+
+    .btn-outline{
+      background:#fff;
+      border:1px solid #c8d8e3;
+      color:#0f172a;
+    }
+
+    .btn-outline:hover{
+      background:#f8fbfd;
+      border-color:#aac6d6;
+    }
+
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+    }
+
+    .btn-danger:hover{
+      background:var(--danger-dark);
+    }
+
+    .btn-success{
+      background:var(--success);
+      color:#fff;
+    }
+
+    .btn-success:hover{
+      filter:brightness(.95);
+    }
+
+    .actions-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:14px;
+    }
+
+    .actions-left,
+    .actions-right{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .pill{
+      background:#eef6fb;
+      color:#0b5e7d;
+      border:1px solid #cde7f2;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .table-panel{
+      overflow:hidden;
+    }
+
+    .table-wrap{
+      position:relative;
+      overflow:hidden;
+      border-top:1px solid var(--border);
+    }
+
+    .hscroll-top{
+      overflow-x:auto;
+      overflow-y:hidden;
+      height:12px;
+      background:#f6fafc;
+      border-bottom:1px solid var(--border);
+    }
+
+    .hscroll-top .spacer{
+      height:1px;
+    }
+
+    .table-container{
+      max-height:78vh;
+      overflow:auto;
+      background:#fff;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:1550px;
+      font-size:14px;
+    }
+
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:5;
+      background:linear-gradient(180deg, #0a97cf 0%, #0088bd 100%);
+      color:#fff;
+      text-align:left;
+      padding:14px 12px;
+      font-size:13px;
+      letter-spacing:.2px;
+      border-bottom:1px solid rgba(255,255,255,.15);
+    }
+
+    tbody td{
+      padding:13px 12px;
+      border-bottom:1px solid #e8eff4;
+      vertical-align:top;
+      white-space:nowrap;
+      background:#fff;
+    }
+
+    tbody tr:nth-child(even) td{
+      background:#fbfdfe;
+    }
+
+    tbody tr:hover td{
+      background:#eef8fd !important;
+    }
+
+    tbody tr.lv{
+      box-shadow: inset 4px 0 0 #0d6efd;
+    }
+
+    tbody tr.lm{
+      box-shadow: inset 4px 0 0 var(--orange);
+    }
+
+    td.obs{
+      white-space:normal;
+      min-width:260px;
+      max-width:320px;
+    }
+
+    td.endereco{
+      white-space:normal;
+      min-width:220px;
+      max-width:280px;
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .badge-serv{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-weight:800;
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.08);
+      vertical-align:middle;
+    }
+
+    .badge-lv{
+      background:rgba(13,110,253,.11);
+      color:#0d5bd6;
+    }
+
+    .badge-lm{
+      background:rgba(243,111,33,.14);
+      color:#be4f10;
+    }
+
+    .foto-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      margin:2px 0;
+      background:#ebf6fb;
+      color:#0b6890;
+      border:1px solid #cfe5ef;
+      padding:6px 10px;
+      border-radius:10px;
+      text-decoration:none;
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .foto-link:hover{
+      background:#dff0f8;
+    }
+
+    .os-box{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:40px;
+    }
+
+    .os-ok{
+      color:#15803d;
+      font-weight:800;
+    }
+
+    .ok-text{
+      color:#15803d;
+      font-weight:800;
+    }
+
+    .checkbox-cell{
+      text-align:center;
+      width:70px;
+    }
+
+    .checkbox-cell input{
+      width:17px;
+      height:17px;
+      cursor:pointer;
+    }
+
+    .empty-state{
+      padding:28px 18px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .empty-state i{
+      font-size:34px;
+      display:block;
+      margin-bottom:8px;
+      color:#8aa8b8;
+    }
+
+    /* Modal */
+    #modalConclusao{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.45);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    #modalConclusao .box{
+      width:min(600px, 100%);
+      background:#fff;
+      border-radius:20px;
+      box-shadow:0 24px 60px rgba(0,0,0,.30);
+      border:1px solid var(--border);
+      overflow:hidden;
+    }
+
+    .modal-head{
+      padding:18px 20px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background:#f8fbfd;
+    }
+
+    .modal-head strong{
+      font-size:18px;
+      color:#0f172a;
+    }
+
+    .modal-body{
+      padding:20px;
+    }
+
+    .modal-actions{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+      margin-top:14px;
+    }
+
+    .helper{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    @media (max-width: 1200px){
+      .toolbar{
+        grid-template-columns:1fr;
+      }
+
+      .filters-grid{
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+      }
+    }
+
+    @media (max-width: 820px){
+      .app{
+        padding:12px;
+      }
+
+      .hero{
+        padding:18px;
+      }
+
+      .hero h1{
+        font-size:22px;
+      }
+
+      .filters-grid{
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+
+      .token-row{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .quick-info{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px){
+      .filters-grid,
+      .quick-info,
+      .token-row{
+        grid-template-columns:1fr;
+      }
+
+      .actions-left,
+      .actions-right{
+        width:100%;
+      }
+
+      .actions-left .btn,
+      .actions-right .btn{
+        flex:1;
+      }
+
+      .pill{
+        width:100%;
+        text-align:center;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="app">
+    <div class="topbar">
+      <div class="hero">
+        <h1><i class="bi bi-clipboard2-pulse"></i> Registros de Serviços de Manutenção</h1>
+        <p>
+          Painel otimizado para consulta, acompanhamento, geração de OS, conclusão de serviço e exclusão em lote.
+        </p>
 
-<div class="header">
-  <h2>📋 Registros Serviços de Manutenção</h2>
-
-  <div class="filtros">
-    <input type="date" id="filtroData" />
-
-    <select id="filtroBase">
-      <option value="">Filtrar por Base</option>
-    </select>
-
-    <select id="filtroRegional">
-      <option value="">Filtrar por Regional</option>
-    </select>
-
-    <select id="filtroStatus">
-      <option value="pendentes" selected>Pendentes</option>
-      <option value="concluidos">Concluídos</option>
-      <option value="todos">Todos</option>
-    </select>
-
-    <select id="filtroTipo">
-      <option value="todos" selected>LV + LM</option>
-      <option value="LINHA_VIVA">Somente LV</option>
-      <option value="LINHA_MORTA">Somente LM</option>
-    </select>
-
-    <input id="filtroOS" placeholder="Buscar OS (ex: 123, OS 00123...)" />
-
-    <select id="itensPorPagina">
-      <option value="25">25 / página</option>
-      <option value="50" selected>50 / página</option>
-      <option value="100">100 / página</option>
-      <option value="200">200 / página</option>
-    </select>
-  </div>
-
-  <div class="pagerbar">
-    <div class="pager-left">
-      <button class="btn btn-outline" id="btnAnterior">⬅️ Anterior</button>
-      <button class="btn btn-outline" id="btnProximo">Próximo ➡️</button>
-      <span id="infoPagina" class="pill">Página 1</span>
-      <span id="infoSelecao" class="pill">0 selecionado(s)</span>
+        <div class="hero-stats">
+          <span class="hero-pill" id="heroPagina">Página 1</span>
+          <span class="hero-pill" id="heroRegistros">0 registros</span>
+          <span class="hero-pill" id="heroSelecionados">0 selecionados</span>
+        </div>
+      </div>
     </div>
 
-    <div class="pager-right">
-      <div class="tokenbox">
-        <input id="adminToken" type="password" placeholder="Token admin" />
-        <button class="btn btn-outline" id="btnMostrarToken" type="button" title="Mostrar/ocultar">
-          <i class="bi bi-eye"></i>
-        </button>
-        <button class="btn btn-outline" id="btnSalvarToken" type="button">Salvar</button>
-        <button class="btn btn-outline" id="btnLimparToken" type="button">Limpar</button>
-        <button class="btn btn-danger" id="btnExcluirSelecionados" type="button">🗑️ Excluir selecionados</button>
+    <div class="toolbar">
+      <div class="panel section">
+        <div class="section-title">
+          <div>
+            <h2>Filtros</h2>
+            <small>Use os filtros para localizar rapidamente os registros desejados</small>
+          </div>
+          <button class="btn btn-outline" id="btnLimparFiltros" type="button">
+            <i class="bi bi-eraser"></i> Limpar filtros
+          </button>
+        </div>
+
+        <div class="filters-grid">
+          <div class="field">
+            <label for="filtroData">Data</label>
+            <input class="input" type="date" id="filtroData" />
+          </div>
+
+          <div class="field">
+            <label for="filtroBase">Base</label>
+            <select class="select" id="filtroBase">
+              <option value="">Todas</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="filtroRegional">Regional</label>
+            <select class="select" id="filtroRegional">
+              <option value="">Todas</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="filtroStatus">Status</label>
+            <select class="select" id="filtroStatus">
+              <option value="pendentes" selected>Pendentes</option>
+              <option value="concluidos">Concluídos</option>
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="filtroTipo">Tipo de serviço</label>
+            <select class="select" id="filtroTipo">
+              <option value="todos" selected>LV + LM</option>
+              <option value="LINHA_VIVA">Somente LV</option>
+              <option value="LINHA_MORTA">Somente LM</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="filtroOS">Busca por OS</label>
+            <input class="input" id="filtroOS" placeholder="Ex: 123, OS 00123..." />
+          </div>
+
+          <div class="field">
+            <label for="itensPorPagina">Itens por página</label>
+            <select class="select" id="itensPorPagina">
+              <option value="25">25 / página</option>
+              <option value="50" selected>50 / página</option>
+              <option value="100">100 / página</option>
+              <option value="200">200 / página</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <span id="status" class="status"><i class="bi bi-check2-square"></i> Pronto</span>
+      <div class="panel section">
+        <div class="section-title">
+          <div>
+            <h2>Ações e Controle</h2>
+            <small>Gerencie token, seleção e paginação</small>
+          </div>
+        </div>
+
+        <div class="actions-grid">
+          <div>
+            <div class="field" style="margin-bottom:8px;">
+              <label for="adminToken">Token admin</label>
+            </div>
+            <div class="token-row">
+              <input class="token-input" id="adminToken" type="password" placeholder="Informe o token admin" />
+              <button class="btn btn-outline" id="btnMostrarToken" type="button" title="Mostrar/ocultar">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-outline" id="btnSalvarToken" type="button">
+                <i class="bi bi-floppy"></i> Salvar
+              </button>
+              <button class="btn btn-outline" id="btnLimparToken" type="button">
+                <i class="bi bi-trash3"></i> Limpar
+              </button>
+            </div>
+          </div>
+
+          <div class="quick-info">
+            <div class="info-card">
+              <div class="label">Selecionados</div>
+              <div class="value" id="infoSelecao">0</div>
+              <div class="sub">Prontos para exclusão</div>
+            </div>
+
+            <div class="info-card">
+              <div class="label">Na página atual</div>
+              <div class="value" id="infoRegistrosPagina">0</div>
+              <div class="sub">Após filtros aplicados</div>
+            </div>
+          </div>
+
+          <div class="status-box" id="status">
+            <i class="bi bi-check2-circle"></i> Pronto
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="table-wrap">
-  <div class="hscroll-top" id="hscrollTop">
-    <div class="spacer" id="hscrollSpacer"></div>
-  </div>
+    <div class="panel table-panel">
+      <div class="section" style="padding-bottom:12px;">
+        <div class="actions-row">
+          <div class="actions-left">
+            <button class="btn btn-outline" id="btnAnterior">
+              <i class="bi bi-arrow-left"></i> Anterior
+            </button>
+            <button class="btn btn-outline" id="btnProximo">
+              Próximo <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
 
-  <div class="table-container" id="tableScroll">
-    <table id="tabela">
-      <thead>
-        <tr>
-          <th style="text-align:center;">Excluir</th>
-          <th>Data</th>
-          <th>Equipe</th>
-          <th>Base</th>
-          <th>Regional</th>
-          <th>Componente</th>
-          <th>Serviço</th>
-          <th>Endereço</th>
-          <th>GPS</th>
-          <th>Condutor</th>
-          <th>Alma de Aço</th>
-          <th>Acesso Caminhão</th>
-          <th>Observação</th>
-          <th>Fotos</th>
-          <th>OS</th>
-          <th>Concluído?</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<input id="fileConclusao" type="file" accept="image/*" style="display:none;" />
-
-<div id="modalConclusao">
-  <div class="box">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
-      <strong style="font-size:16px;">✅ Concluir registro</strong>
-      <button type="button" id="btnFecharConclusao" class="btn btn-outline" style="padding:6px 10px;">Fechar</button>
-    </div>
-
-    <label style="font-weight:700; display:block; margin:10px 0 6px;">Observação (opcional)</label>
-    <textarea id="conclObs" rows="3" style="width:100%; padding:10px; border:1px solid #cfd8dc; border-radius:10px;"></textarea>
-
-    <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:12px; flex-wrap:wrap;">
-      <div>
-        <label style="font-weight:700; display:block; margin-bottom:6px;">Foto da conclusão (opcional)</label>
-        <input id="conclFoto" type="file" accept="image/*">
-        <div id="conclFotoInfo" style="font-size:12px; color:#555; margin-top:6px;"></div>
+          <div class="actions-right">
+            <span class="pill" id="infoPagina">Página 1</span>
+            <button class="btn btn-danger" id="btnExcluirSelecionados" type="button">
+              <i class="bi bi-trash"></i> Excluir selecionados
+            </button>
+          </div>
+        </div>
       </div>
 
-      <button type="button" id="btnConfirmarConclusao" class="btn" style="background:#198754; color:#fff;">
-        Confirmar Conclusão
-      </button>
+      <div class="table-wrap">
+        <div class="hscroll-top" id="hscrollTop">
+          <div class="spacer" id="hscrollSpacer"></div>
+        </div>
+
+        <div class="table-container" id="tableScroll">
+          <table id="tabela">
+            <thead>
+              <tr>
+                <th class="checkbox-cell">Excluir</th>
+                <th>Data</th>
+                <th>Equipe</th>
+                <th>Base</th>
+                <th>Regional</th>
+                <th>Componente</th>
+                <th>Serviço</th>
+                <th>Endereço</th>
+                <th>GPS</th>
+                <th>Condutor</th>
+                <th>Alma de Aço</th>
+                <th>Acesso Caminhão</th>
+                <th>Observação</th>
+                <th>Fotos</th>
+                <th>OS</th>
+                <th>Concluído?</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+
+  <div id="modalConclusao">
+    <div class="box">
+      <div class="modal-head">
+        <strong><i class="bi bi-check2-square"></i> Concluir registro</strong>
+        <button type="button" id="btnFecharConclusao" class="btn btn-outline">Fechar</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label for="conclObs">Observação da conclusão</label>
+          <textarea id="conclObs" rows="4" placeholder="Digite uma observação, se necessário..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <div style="flex:1; min-width:240px;">
+            <div class="field">
+              <label for="conclFoto">Foto da conclusão</label>
+              <input id="conclFoto" type="file" accept="image/*">
+              <div class="helper" id="conclFotoInfo">Nenhum arquivo selecionado.</div>
+            </div>
+          </div>
+
+          <button type="button" id="btnConfirmarConclusao" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Confirmar conclusão
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
 const DEFAULT_PAGE_SIZE = 50;
+const TOKEN_KEY = "LL_ADMIN_TOKEN";
 
-let itensPagina = [];
-let pageNumber = 1;
-let currentCursor = null;
-let nextCursor = null;
-let cursorHistory = [];
+const state = {
+  itensPagina: [],
+  pageNumber: 1,
+  currentCursor: null,
+  nextCursor: null,
+  cursorHistory: [],
+  selectedIds: new Set(),
+  bases: new Set(),
+  regionais: new Set(),
+  conclIdAtual: null
+};
 
-const setBases = new Set();
-const setRegionais = new Set();
-const selectedIds = new Set();
-
-let conclIdAtual = null;
-
-// =====================
-// CACHE DE ELEMENTOS
-// =====================
 const el = {
   filtroData: document.getElementById("filtroData"),
   filtroBase: document.getElementById("filtroBase"),
@@ -338,11 +870,16 @@ const el = {
   filtroTipo: document.getElementById("filtroTipo"),
   filtroOS: document.getElementById("filtroOS"),
   itensPorPagina: document.getElementById("itensPorPagina"),
+  btnLimparFiltros: document.getElementById("btnLimparFiltros"),
 
   btnAnterior: document.getElementById("btnAnterior"),
   btnProximo: document.getElementById("btnProximo"),
   infoPagina: document.getElementById("infoPagina"),
   infoSelecao: document.getElementById("infoSelecao"),
+  infoRegistrosPagina: document.getElementById("infoRegistrosPagina"),
+  heroPagina: document.getElementById("heroPagina"),
+  heroRegistros: document.getElementById("heroRegistros"),
+  heroSelecionados: document.getElementById("heroSelecionados"),
   status: document.getElementById("status"),
 
   adminToken: document.getElementById("adminToken"),
@@ -367,14 +904,40 @@ const el = {
 
 el.itensPorPagina.value = String(DEFAULT_PAGE_SIZE);
 
-// =====================
-// TOKEN
-// =====================
-const TOKEN_KEY = "LL_ADMIN_TOKEN";
+function escapeHtml(str){
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatarData(dataISO) {
+  if (!dataISO) return "-";
+  const [ano, mes, dia] = String(dataISO).split("-");
+  return (ano && mes && dia) ? `${dia}/${mes}/${ano}` : dataISO;
+}
+
+function onlyDigits(s){
+  return String(s || "").replace(/\D+/g, "");
+}
+
+function getLimit(){
+  const v = parseInt(el.itensPorPagina.value || String(DEFAULT_PAGE_SIZE), 10);
+  return Math.min(Math.max(v, 1), 200);
+}
+
+function setStatus(msg, ok = true){
+  el.status.className = ok ? "status-box" : "status-box error";
+  el.status.innerHTML = ok
+    ? `<i class="bi bi-check2-circle"></i> ${msg}`
+    : `<i class="bi bi-exclamation-triangle"></i> ${msg}`;
+}
 
 function loadToken(){
-  const t = localStorage.getItem(TOKEN_KEY) || "";
-  el.adminToken.value = t;
+  const token = localStorage.getItem(TOKEN_KEY) || "";
+  el.adminToken.value = token;
 }
 
 function saveToken(){
@@ -388,60 +951,55 @@ function clearToken(){
   alert("Token removido do navegador.");
 }
 
-el.btnSalvarToken.addEventListener("click", saveToken);
-el.btnLimparToken.addEventListener("click", clearToken);
-el.btnMostrarToken.addEventListener("click", () => {
-  el.adminToken.type = (el.adminToken.type === "password") ? "text" : "password";
-});
+function updateMetrics(){
+  const total = state.itensPagina.length;
+  const selecionados = state.selectedIds.size;
 
-loadToken();
-
-// =====================
-// UTIL
-// =====================
-function updateSelecaoUI(){
-  el.infoSelecao.innerText = `${selectedIds.size} selecionado(s)`;
+  el.infoSelecao.textContent = selecionados;
+  el.infoRegistrosPagina.textContent = total;
+  el.infoPagina.textContent = `Página ${state.pageNumber} • ${total} item(ns)`;
+  el.heroPagina.textContent = `Página ${state.pageNumber}`;
+  el.heroRegistros.textContent = `${total} registro(s)`;
+  el.heroSelecionados.textContent = `${selecionados} selecionado(s)`;
 }
 
-function setStatus(msg, ok = true){
-  el.status.style.color = ok ? "#0f5132" : "#842029";
-  el.status.innerHTML = (ok
-    ? `<i class="bi bi-check2-square"></i>`
-    : `<i class="bi bi-exclamation-triangle"></i>`) + " " + msg;
+function preencherFiltrosIncremental(lista){
+  const baseAtual = el.filtroBase.value;
+  const regionalAtual = el.filtroRegional.value;
+
+  for (const item of lista){
+    if (item.base) state.bases.add(item.base);
+    if (item.regional) state.regionais.add(item.regional);
+  }
+
+  const basesOrdenadas = [...state.bases].sort((a,b) => a.localeCompare(b, "pt-BR"));
+  const regionaisOrdenadas = [...state.regionais].sort((a,b) => a.localeCompare(b, "pt-BR"));
+
+  el.filtroBase.innerHTML = `<option value="">Todas</option>`;
+  for (const base of basesOrdenadas){
+    const opt = document.createElement("option");
+    opt.value = base;
+    opt.textContent = base;
+    el.filtroBase.appendChild(opt);
+  }
+
+  el.filtroRegional.innerHTML = `<option value="">Todas</option>`;
+  for (const reg of regionaisOrdenadas){
+    const opt = document.createElement("option");
+    opt.value = reg;
+    opt.textContent = reg;
+    el.filtroRegional.appendChild(opt);
+  }
+
+  el.filtroBase.value = baseAtual;
+  el.filtroRegional.value = regionalAtual;
 }
 
-function formatarData(dataISO) {
-  if (!dataISO) return "-";
-  const [ano, mes, dia] = String(dataISO).split("-");
-  return (ano && mes && dia) ? `${dia}/${mes}/${ano}` : dataISO;
-}
-
-function onlyDigits(s){
-  return String(s || "").replace(/\D+/g, "");
-}
-
-function escapeHtml(str){
-  return String(str ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function getLimit(){
-  const v = parseInt(el.itensPorPagina.value || String(DEFAULT_PAGE_SIZE), 10);
-  return Math.min(Math.max(v, 1), 200);
-}
-
-// =====================
-// SCROLL HORIZONTAL
-// =====================
 function syncHorizontalScroll(){
   el.hscrollSpacer.style.width = (el.tabela.scrollWidth || 0) + "px";
 }
 
-(function bindHorizontalScroll(){
+(function bindScrollSync(){
   let syncing = false;
 
   el.hscrollTop.addEventListener("scroll", () => {
@@ -459,86 +1017,40 @@ function syncHorizontalScroll(){
   });
 })();
 
-// =====================
-// FILTROS
-// =====================
-function preencherFiltrosIncremental(lista){
-  const baseAtual = el.filtroBase.value;
-  const regAtual = el.filtroRegional.value;
-
-  for (const r of lista){
-    if (r.base) setBases.add(r.base);
-    if (r.regional) setRegionais.add(r.regional);
-  }
-
-  const basesOrdenadas = [...setBases].sort();
-  const regionaisOrdenadas = [...setRegionais].sort();
-
-  el.filtroBase.innerHTML = `<option value="">Filtrar por Base</option>`;
-  for (const b of basesOrdenadas){
-    const opt = document.createElement("option");
-    opt.value = b;
-    opt.textContent = b;
-    el.filtroBase.appendChild(opt);
-  }
-
-  el.filtroRegional.innerHTML = `<option value="">Filtrar por Regional</option>`;
-  for (const r of regionaisOrdenadas){
-    const opt = document.createElement("option");
-    opt.value = r;
-    opt.textContent = r;
-    el.filtroRegional.appendChild(opt);
-  }
-
-  el.filtroBase.value = baseAtual;
-  el.filtroRegional.value = regAtual;
+function renderEmptyState(){
+  el.tbody.innerHTML = `
+    <tr>
+      <td colspan="16">
+        <div class="empty-state">
+          <i class="bi bi-inbox"></i>
+          Nenhum registro encontrado para os filtros aplicados.
+        </div>
+      </td>
+    </tr>
+  `;
+  updateMetrics();
+  requestAnimationFrame(syncHorizontalScroll);
 }
 
-function obterFiltrados(){
-  const filtroData = el.filtroData.value;
-  const filtroBase = el.filtroBase.value;
-  const filtroReg = el.filtroRegional.value;
-  const filtroTipo = el.filtroTipo.value || "todos";
-
-  const osBuscaRaw = (el.filtroOS.value || "").trim();
-  const osBuscaDig = onlyDigits(osBuscaRaw);
-
-  return itensPagina
-    .filter(r => !filtroData || String(r.data || "").startsWith(filtroData))
-    .filter(r => !filtroBase || r.base === filtroBase)
-    .filter(r => !filtroReg || r.regional === filtroReg)
-    .filter(r => {
-      if (filtroTipo === "todos") return true;
-      return String(r.tipo_servico || "").toUpperCase() === filtroTipo;
-    })
-    .filter(r => {
-      if (!osBuscaRaw) return true;
-      const ss = String(r.ssNumero || "");
-      const ssDig = onlyDigits(ss);
-
-      if (osBuscaDig) return ssDig.includes(osBuscaDig);
-      return ss.toLowerCase().includes(osBuscaRaw.toLowerCase());
-    });
-}
-
-// =====================
-// TABELA
-// =====================
 function atualizarTabela(){
-  const filtrados = obterFiltrados();
-  const frag = document.createDocumentFragment();
-
   el.tbody.innerHTML = "";
 
-  for (const reg of filtrados){
+  if (!state.itensPagina.length){
+    renderEmptyState();
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  for (const reg of state.itensPagina){
     const tr = document.createElement("tr");
-    const checked = selectedIds.has(reg.id) ? "checked" : "";
+    const checked = state.selectedIds.has(reg.id) ? "checked" : "";
 
     const tipo = String(reg.tipo_servico || "").toUpperCase();
     const ehLM = tipo === "LINHA_MORTA";
     tr.className = ehLM ? "lm" : "lv";
 
-    const labelBadge = ehLM
+    const badge = ehLM
       ? `<span class="badge-serv badge-lm">🟠 LM</span>`
       : `<span class="badge-serv badge-lv">🔵 LV</span>`;
 
@@ -546,16 +1058,16 @@ function atualizarTabela(){
       ? `${escapeHtml(reg.tipo_rede || "-")} • ${escapeHtml(reg.servico_lm || "-")}`
       : `${escapeHtml(reg.servicoll || "-")}`;
 
+    const fotosHtml = Array.isArray(reg.fotosUrl) && reg.fotosUrl.length
+      ? reg.fotosUrl.map(url => `<a class="foto-link" href="${url}" target="_blank"><i class="bi bi-camera"></i> Foto</a>`).join("<br>")
+      : `<span class="muted">-</span>`;
+
     const conclFotoUrl = reg.concluidoFoto
       ? `${API_URL}/foto/${encodeURIComponent(reg.concluidoFoto)}`
       : "";
 
-    const fotosHtml = Array.isArray(reg.fotosUrl) && reg.fotosUrl.length
-      ? reg.fotosUrl.map(url => `<a class="foto" href="${url}" target="_blank">📷 Foto</a>`).join("<br>")
-      : "-";
-
     tr.innerHTML = `
-      <td style="text-align:center;">
+      <td class="checkbox-cell">
         <input type="checkbox" data-id="${escapeHtml(reg.id)}" ${checked} />
       </td>
       <td>${formatarData(reg.data)}</td>
@@ -563,125 +1075,57 @@ function atualizarTabela(){
       <td>${escapeHtml(reg.base || "-")}</td>
       <td>${escapeHtml(reg.regional || "-")}</td>
       <td>${escapeHtml(reg.componente || "-")}</td>
-      <td>${labelBadge}<span style="margin-left:6px;">${textoServico}</span></td>
-      <td>${escapeHtml(reg.endereco || "-")}</td>
+      <td>${badge}<span style="margin-left:8px;">${textoServico}</span></td>
+      <td class="endereco">${escapeHtml(reg.endereco || "-")}</td>
       <td>${escapeHtml(reg.gps || "-")}</td>
       <td>${escapeHtml(reg.condutor || "-")}</td>
       <td>${escapeHtml(reg.almaaco || "-")}</td>
-      <td style="font-weight:600; color:${reg.acessocaminhao === 'Sim' ? '#1e7e34' : '#c82333'}">
+      <td style="font-weight:700; color:${reg.acessocaminhao === 'Sim' ? '#15803d' : '#c2410c'}">
         ${escapeHtml(reg.acessocaminhao || "-")}
       </td>
-      <td>${escapeHtml(reg.observacao || "-")}</td>
+      <td class="obs">${escapeHtml(reg.observacao || "-")}</td>
       <td style="text-align:center;">${fotosHtml}</td>
-      <td style="text-align:center; font-weight:bold;">
-        ${
-          reg.ssGerada && reg.ssNumero
-            ? `<span style="color:green;">OS Nº ${escapeHtml(reg.ssNumero)}</span>`
-            : `<button type="button" onclick="gerarSS('${escapeHtml(reg.id)}')" style="padding:6px 10px;border:none;border-radius:6px;background:#0097CE;color:white;cursor:pointer;">Gerar SS</button>`
-        }
+      <td style="text-align:center;">
+        <div class="os-box">
+          ${
+            reg.ssGerada && reg.ssNumero
+              ? `<span class="os-ok">OS Nº ${escapeHtml(reg.ssNumero)}</span>`
+              : `<button type="button" class="btn btn-primary" onclick="gerarSS('${escapeHtml(reg.id)}')">Gerar SS</button>`
+          }
+        </div>
       </td>
-      <td style="text-align:center; font-weight:700;">
+      <td style="text-align:center;">
         ${
           reg.concluido
-            ? `<span style="color:green;">✅ Concluído</span>
-               ${reg.concluidoObs ? `<div style="font-weight:500; font-size:12px; color:#1f3b2c; margin-top:4px; max-width:220px; white-space:normal;">${escapeHtml(reg.concluidoObs)}</div>` : ""}
-               ${conclFotoUrl ? `<div style="margin-top:6px;"><a class="foto" href="${conclFotoUrl}" target="_blank">📷 Foto</a></div>` : ""}`
-            : `<button type="button" onclick="concluirRegistro('${escapeHtml(reg.id)}')" style="padding:6px 10px;border:none;border-radius:6px;background:#198754;color:white;cursor:pointer;">Concluir</button>`
+            ? `
+              <div class="ok-text">✅ Concluído</div>
+              ${reg.concluidoObs ? `<div style="margin-top:6px; font-size:12px; white-space:normal; max-width:240px; color:#334155;">${escapeHtml(reg.concluidoObs)}</div>` : ""}
+              ${conclFotoUrl ? `<div style="margin-top:8px;"><a class="foto-link" href="${conclFotoUrl}" target="_blank"><i class="bi bi-camera"></i> Foto</a></div>` : ""}
+            `
+            : `<button type="button" class="btn btn-success" onclick="concluirRegistro('${escapeHtml(reg.id)}')">Concluir</button>`
         }
       </td>
     `;
 
-    const cb = tr.querySelector('input[type="checkbox"][data-id]');
+    const cb = tr.querySelector("input[type='checkbox']");
     cb.addEventListener("change", (e) => {
       const id = e.target.getAttribute("data-id");
       if (!id) return;
-      if (e.target.checked) selectedIds.add(id);
-      else selectedIds.delete(id);
-      updateSelecaoUI();
+
+      if (e.target.checked) state.selectedIds.add(id);
+      else state.selectedIds.delete(id);
+
+      updateMetrics();
     });
 
     frag.appendChild(tr);
   }
 
   el.tbody.appendChild(frag);
-  el.infoPagina.innerText = `Página ${pageNumber} • ${filtrados.length} item(ns)`;
-  updateSelecaoUI();
-
+  updateMetrics();
   requestAnimationFrame(syncHorizontalScroll);
 }
 
-// =====================
-// EXCLUIR
-// =====================
-async function excluirSelecionados(){
-  const token = el.adminToken.value.trim();
-  if (!token) return alert("Informe o Token admin.");
-
-  const ids = [...selectedIds];
-  if (!ids.length) return alert("Nenhum registro selecionado para excluir.");
-
-  const ok = confirm(`Tem certeza que deseja excluir ${ids.length} registro(s)? Essa ação não pode ser desfeita.`);
-  if (!ok) return;
-
-  try{
-    setStatus("Excluindo...", true);
-
-    const resp = await fetch(`${API_URL}/excluir`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-token": token
-      },
-      body: JSON.stringify({ ids })
-    });
-
-    const out = await resp.json().catch(() => ({}));
-    if (!resp.ok || !out.ok) {
-      setStatus("Falha ao excluir", false);
-      return alert(out.error || "Erro ao excluir.");
-    }
-
-    alert(`Excluídos: ${out.deleted}`);
-    selectedIds.clear();
-    updateSelecaoUI();
-    await carregarPaginaAtual();
-  } catch (e){
-    console.error(e);
-    setStatus("Erro de conexão", false);
-    alert("Erro ao conectar com o servidor.");
-  } finally {
-    setStatus("Pronto", true);
-  }
-}
-
-el.btnExcluirSelecionados.addEventListener("click", excluirSelecionados);
-
-// =====================
-// GERAR SS
-// =====================
-window.gerarSS = async function(id){
-  const numero = prompt("Digite o número da SS:");
-  if (!numero) return alert("SS não informada.");
-
-  try {
-    const resp = await fetch(`${API_URL}/gerar-ss`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ssGerada: true, ssNumero: numero })
-    });
-
-    if (!resp.ok) return alert("Erro ao salvar a OS.");
-    alert("OS registrada com sucesso!");
-    await carregarPaginaAtual();
-  } catch (e) {
-    console.error(e);
-    alert("Erro ao conectar com o servidor.");
-  }
-};
-
-// =====================
-// FETCH / PAGINAÇÃO
-// =====================
 async function fetchPage(cursor){
   const qs = new URLSearchParams();
 
@@ -698,14 +1142,12 @@ async function fetchPage(cursor){
   if (regional) qs.set("regional", regional);
   if (tipo && tipo !== "todos") qs.set("tipo", tipo);
 
-  // se escolher uma data específica, usa início=fim
-  if (data) {
+  if (data){
     qs.set("dataInicio", data);
     qs.set("dataFim", data);
   }
 
   if (os) qs.set("os", os);
-
   if (cursor) qs.set("cursor", cursor);
 
   const resp = await fetch(`${API_URL}/listar?${qs.toString()}`, {
@@ -718,52 +1160,121 @@ async function fetchPage(cursor){
 }
 
 async function carregarPaginaAtual(){
-  try {
-    setStatus("Carregando...", true);
+  try{
+    setStatus("Carregando registros...", true);
 
-    const payload = await fetchPage(currentCursor);
+    const payload = await fetchPage(state.currentCursor);
 
-    itensPagina = payload.items || [];
-    nextCursor = payload.nextCursor || null;
-    const hasMore = payload.hasMore === true;
+    state.itensPagina = payload.items || [];
+    state.nextCursor = payload.nextCursor || null;
 
-    el.btnAnterior.disabled = (pageNumber <= 1);
-    el.btnProximo.disabled = !hasMore;
-
-    preencherFiltrosIncremental(itensPagina);
+    preencherFiltrosIncremental(state.itensPagina);
     atualizarTabela();
 
-    setStatus(`Carregado (${itensPagina.length} registro(s))`, true);
-  } catch (err) {
+    el.btnAnterior.disabled = (state.pageNumber <= 1);
+    el.btnProximo.disabled = payload.hasMore !== true;
+
+    setStatus(`Carregado com sucesso (${state.itensPagina.length} registro(s)).`, true);
+  } catch (err){
     console.error(err);
-    setStatus("Erro ao carregar", false);
+    state.itensPagina = [];
+    atualizarTabela();
+    setStatus("Erro ao carregar os registros.", false);
   }
 }
 
 async function primeiraPagina(){
-  pageNumber = 1;
-  currentCursor = null;
-  nextCursor = null;
-  cursorHistory = [];
-  selectedIds.clear();
-  updateSelecaoUI();
+  state.pageNumber = 1;
+  state.currentCursor = null;
+  state.nextCursor = null;
+  state.cursorHistory = [];
+  state.selectedIds.clear();
   await carregarPaginaAtual();
 }
 
-// =====================
-// MODAL CONCLUSÃO
-// =====================
+function limparFiltrosUI(){
+  el.filtroData.value = "";
+  el.filtroBase.value = "";
+  el.filtroRegional.value = "";
+  el.filtroStatus.value = "pendentes";
+  el.filtroTipo.value = "todos";
+  el.filtroOS.value = "";
+  el.itensPorPagina.value = String(DEFAULT_PAGE_SIZE);
+}
+
+async function excluirSelecionados(){
+  const token = el.adminToken.value.trim();
+  if (!token) return alert("Informe o Token admin.");
+
+  const ids = [...state.selectedIds];
+  if (!ids.length) return alert("Nenhum registro selecionado para excluir.");
+
+  const confirmou = confirm(`Tem certeza que deseja excluir ${ids.length} registro(s)?`);
+  if (!confirmou) return;
+
+  try{
+    setStatus("Excluindo registros...", true);
+
+    const resp = await fetch(`${API_URL}/excluir`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": token
+      },
+      body: JSON.stringify({ ids })
+    });
+
+    const out = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !out.ok){
+      setStatus("Falha ao excluir registros.", false);
+      return alert(out.error || "Erro ao excluir.");
+    }
+
+    alert(`Excluídos: ${out.deleted}`);
+    state.selectedIds.clear();
+    await carregarPaginaAtual();
+  } catch (e){
+    console.error(e);
+    setStatus("Erro de conexão ao excluir.", false);
+    alert("Erro ao conectar com o servidor.");
+  } finally {
+    updateMetrics();
+  }
+}
+
+window.gerarSS = async function(id){
+  const numero = prompt("Digite o número da SS:");
+  if (!numero) return alert("SS não informada.");
+
+  try{
+    const resp = await fetch(`${API_URL}/gerar-ss`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ssGerada: true, ssNumero: numero })
+    });
+
+    if (!resp.ok) return alert("Erro ao salvar a OS.");
+
+    alert("OS registrada com sucesso!");
+    await carregarPaginaAtual();
+  } catch (e){
+    console.error(e);
+    alert("Erro ao conectar com o servidor.");
+  }
+};
+
 function abrirModalConclusao(id){
-  conclIdAtual = id;
+  state.conclIdAtual = id;
   el.conclObs.value = "";
   el.conclFoto.value = "";
-  el.conclFotoInfo.textContent = "";
+  el.conclFotoInfo.textContent = "Nenhum arquivo selecionado.";
   el.modalConclusao.style.display = "flex";
 }
 
 function fecharModalConclusao(){
+  state.conclIdAtual = null;
   el.modalConclusao.style.display = "none";
-  conclIdAtual = null;
 }
 
 window.concluirRegistro = function(id){
@@ -772,33 +1283,22 @@ window.concluirRegistro = function(id){
   abrirModalConclusao(id);
 };
 
-el.btnFecharConclusao.addEventListener("click", fecharModalConclusao);
-
-el.modalConclusao.addEventListener("click", (e) => {
-  if (e.target === el.modalConclusao) fecharModalConclusao();
-});
-
-el.conclFoto.addEventListener("change", () => {
-  const f = el.conclFoto.files && el.conclFoto.files[0];
-  el.conclFotoInfo.textContent = f ? `Selecionado: ${f.name}` : "";
-});
-
-el.btnConfirmarConclusao.addEventListener("click", async () => {
+async function confirmarConclusao(){
   const token = el.adminToken.value.trim();
   if (!token) return alert("Informe o Token admin.");
-  if (!conclIdAtual) return;
+  if (!state.conclIdAtual) return;
 
   const obs = (el.conclObs.value || "").trim();
   const file = el.conclFoto.files && el.conclFoto.files[0] ? el.conclFoto.files[0] : null;
 
-  const ok = confirm("Confirmar conclusão deste registro?");
-  if (!ok) return;
+  const confirmou = confirm("Confirmar conclusão deste registro?");
+  if (!confirmou) return;
 
-  try {
+  try{
     setStatus("Salvando conclusão...", true);
 
     const fd = new FormData();
-    fd.append("id", conclIdAtual);
+    fd.append("id", state.conclIdAtual);
     fd.append("observacao", obs);
     if (file) fd.append("arquivo", file);
 
@@ -809,8 +1309,9 @@ el.btnConfirmarConclusao.addEventListener("click", async () => {
     });
 
     const out = await resp.json().catch(() => ({}));
-    if (!resp.ok || !out.ok) {
-      setStatus("Falha ao concluir", false);
+
+    if (!resp.ok || !out.ok){
+      setStatus("Falha ao concluir registro.", false);
       return alert(out.error || `Erro ao concluir (HTTP ${resp.status}).`);
     }
 
@@ -819,74 +1320,92 @@ el.btnConfirmarConclusao.addEventListener("click", async () => {
     await carregarPaginaAtual();
   } catch (e){
     console.error(e);
-    setStatus("Erro de conexão", false);
+    setStatus("Erro de conexão ao concluir.", false);
     alert("Erro ao conectar com o servidor.");
-  } finally {
-    setStatus("Pronto", true);
   }
-});
+}
 
-// =====================
-// EVENTOS
-// =====================
-el.filtroStatus.addEventListener("change", async () => {
-  selectedIds.clear();
-  updateSelecaoUI();
-  await primeiraPagina();
-});
+function bindEvents(){
+  el.btnSalvarToken.addEventListener("click", saveToken);
+  el.btnLimparToken.addEventListener("click", clearToken);
 
-el.btnProximo.addEventListener("click", async () => {
-  if (!nextCursor) return;
-  cursorHistory.push(currentCursor);
-  currentCursor = nextCursor;
-  pageNumber += 1;
-  await carregarPaginaAtual();
-});
+  el.btnMostrarToken.addEventListener("click", () => {
+    el.adminToken.type = el.adminToken.type === "password" ? "text" : "password";
+    el.btnMostrarToken.innerHTML = el.adminToken.type === "password"
+      ? `<i class="bi bi-eye"></i>`
+      : `<i class="bi bi-eye-slash"></i>`;
+  });
 
-el.btnAnterior.addEventListener("click", async () => {
-  if (pageNumber <= 1) return;
-  currentCursor = cursorHistory.pop() ?? null;
-  pageNumber -= 1;
-  await carregarPaginaAtual();
-});
+  el.btnExcluirSelecionados.addEventListener("click", excluirSelecionados);
 
-el.filtroData.addEventListener("change", async () => {
-  await primeiraPagina();
-});
+  el.btnAnterior.addEventListener("click", async () => {
+    if (state.pageNumber <= 1) return;
+    state.currentCursor = state.cursorHistory.pop() ?? null;
+    state.pageNumber -= 1;
+    await carregarPaginaAtual();
+  });
 
-el.filtroBase.addEventListener("change", async () => {
-  await primeiraPagina();
-});
+  el.btnProximo.addEventListener("click", async () => {
+    if (!state.nextCursor) return;
+    state.cursorHistory.push(state.currentCursor);
+    state.currentCursor = state.nextCursor;
+    state.pageNumber += 1;
+    await carregarPaginaAtual();
+  });
 
-el.filtroRegional.addEventListener("change", async () => {
-  await primeiraPagina();
-});
+  [
+    el.filtroData,
+    el.filtroBase,
+    el.filtroRegional,
+    el.filtroStatus,
+    el.filtroTipo,
+    el.itensPorPagina
+  ].forEach(item => {
+    item.addEventListener("change", async () => {
+      state.selectedIds.clear();
+      await primeiraPagina();
+    });
+  });
 
-el.filtroTipo.addEventListener("change", async () => {
-  await primeiraPagina();
-});
+  let osTimer = null;
+  el.filtroOS.addEventListener("input", () => {
+    clearTimeout(osTimer);
+    osTimer = setTimeout(async () => {
+      state.selectedIds.clear();
+      await primeiraPagina();
+    }, 350);
+  });
 
-let osTimer = null;
-el.filtroOS.addEventListener("input", () => {
-  clearTimeout(osTimer);
-  osTimer = setTimeout(async () => {
+  el.btnLimparFiltros.addEventListener("click", async () => {
+    limparFiltrosUI();
+    state.selectedIds.clear();
     await primeiraPagina();
-  }, 350);
-});
+  });
 
-el.itensPorPagina.addEventListener("change", async () => {
+  el.btnFecharConclusao.addEventListener("click", fecharModalConclusao);
+
+  el.modalConclusao.addEventListener("click", (e) => {
+    if (e.target === el.modalConclusao) fecharModalConclusao();
+  });
+
+  el.conclFoto.addEventListener("change", () => {
+    const f = el.conclFoto.files && el.conclFoto.files[0];
+    el.conclFotoInfo.textContent = f ? `Arquivo selecionado: ${f.name}` : "Nenhum arquivo selecionado.";
+  });
+
+  el.btnConfirmarConclusao.addEventListener("click", confirmarConclusao);
+
+  window.addEventListener("resize", () => requestAnimationFrame(syncHorizontalScroll));
+}
+
+async function init(){
+  loadToken();
+  bindEvents();
   await primeiraPagina();
-});
-
-window.addEventListener("resize", () => requestAnimationFrame(syncHorizontalScroll));
-
-// =====================
-// INÍCIO
-// =====================
-primeiraPagina().then(() => {
   requestAnimationFrame(syncHorizontalScroll);
-});
-</script>
+}
 
+init();
+</script>
 </body>
 </html>
