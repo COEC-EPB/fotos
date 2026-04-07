@@ -847,7 +847,7 @@
 
 <script>
 const API_URL = "https://withered-hat-347d.pedro-fillype.workers.dev";
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 25;
 const TOKEN_KEY = "LL_ADMIN_TOKEN";
 
 const state = {
@@ -859,7 +859,9 @@ const state = {
   selectedIds: new Set(),
   bases: new Set(),
   regionais: new Set(),
-  conclIdAtual: null
+  conclIdAtual: null,
+  requestController: null,
+  lastRenderHash: "",
 };
 
 const el = {
@@ -919,13 +921,13 @@ function formatarData(dataISO) {
   return (ano && mes && dia) ? `${dia}/${mes}/${ano}` : dataISO;
 }
 
-function onlyDigits(s){
-  return String(s || "").replace(/\D+/g, "");
-}
-
 function getLimit(){
   const v = parseInt(el.itensPorPagina.value || String(DEFAULT_PAGE_SIZE), 10);
   return Math.min(Math.max(v, 1), 200);
+}
+
+function onlyDigits(s){
+  return String(s || "").replace(/\D+/g, "");
 }
 
 function setStatus(msg, ok = true){
@@ -936,8 +938,7 @@ function setStatus(msg, ok = true){
 }
 
 function loadToken(){
-  const token = localStorage.getItem(TOKEN_KEY) || "";
-  el.adminToken.value = token;
+  el.adminToken.value = localStorage.getItem(TOKEN_KEY) || "";
 }
 
 function saveToken(){
@@ -964,35 +965,33 @@ function updateMetrics(){
 }
 
 function preencherFiltrosIncremental(lista){
-  const baseAtual = el.filtroBase.value;
-  const regionalAtual = el.filtroRegional.value;
+  let alterouBase = false;
+  let alterouRegional = false;
 
   for (const item of lista){
-    if (item.base) state.bases.add(item.base);
-    if (item.regional) state.regionais.add(item.regional);
+    if (item.base && !state.bases.has(item.base)) {
+      state.bases.add(item.base);
+      alterouBase = true;
+    }
+    if (item.regional && !state.regionais.has(item.regional)) {
+      state.regionais.add(item.regional);
+      alterouRegional = true;
+    }
   }
 
-  const basesOrdenadas = [...state.bases].sort((a,b) => a.localeCompare(b, "pt-BR"));
-  const regionaisOrdenadas = [...state.regionais].sort((a,b) => a.localeCompare(b, "pt-BR"));
-
-  el.filtroBase.innerHTML = `<option value="">Todas</option>`;
-  for (const base of basesOrdenadas){
-    const opt = document.createElement("option");
-    opt.value = base;
-    opt.textContent = base;
-    el.filtroBase.appendChild(opt);
+  if (alterouBase) {
+    const atual = el.filtroBase.value;
+    const basesOrdenadas = [...state.bases].sort((a,b) => a.localeCompare(b, "pt-BR"));
+    el.filtroBase.innerHTML = `<option value="">Todas</option>` + basesOrdenadas.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    el.filtroBase.value = atual;
   }
 
-  el.filtroRegional.innerHTML = `<option value="">Todas</option>`;
-  for (const reg of regionaisOrdenadas){
-    const opt = document.createElement("option");
-    opt.value = reg;
-    opt.textContent = reg;
-    el.filtroRegional.appendChild(opt);
+  if (alterouRegional) {
+    const atual = el.filtroRegional.value;
+    const regionaisOrdenadas = [...state.regionais].sort((a,b) => a.localeCompare(b, "pt-BR"));
+    el.filtroRegional.innerHTML = `<option value="">Todas</option>` + regionaisOrdenadas.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    el.filtroRegional.value = atual;
   }
-
-  el.filtroBase.value = baseAtual;
-  el.filtroRegional.value = regionalAtual;
 }
 
 function syncHorizontalScroll(){
@@ -1028,27 +1027,39 @@ function renderEmptyState(){
       </td>
     </tr>
   `;
+  state.lastRenderHash = "empty";
   updateMetrics();
   requestAnimationFrame(syncHorizontalScroll);
 }
 
-function atualizarTabela(){
-  el.tbody.innerHTML = "";
+function buildRenderHash(lista){
+  return JSON.stringify(lista.map(r => [
+    r.id,
+    r.ssGerada,
+    r.ssNumero,
+    r.concluido,
+    r.concluidoFoto,
+    r.concluidoObs
+  ]));
+}
 
-  if (!state.itensPagina.length){
+function atualizarTabela(){
+  if (!state.itensPagina.length) {
     renderEmptyState();
     return;
   }
 
-  const frag = document.createDocumentFragment();
+  const hash = buildRenderHash(state.itensPagina);
+  if (hash === state.lastRenderHash) {
+    updateMetrics();
+    return;
+  }
 
-  for (const reg of state.itensPagina){
-    const tr = document.createElement("tr");
+  const html = state.itensPagina.map((reg) => {
     const checked = state.selectedIds.has(reg.id) ? "checked" : "";
-
     const tipo = String(reg.tipo_servico || "").toUpperCase();
     const ehLM = tipo === "LINHA_MORTA";
-    tr.className = ehLM ? "lm" : "lv";
+    const trClass = ehLM ? "lm" : "lv";
 
     const badge = ehLM
       ? `<span class="badge-serv badge-lm">🟠 LM</span>`
@@ -1066,69 +1077,78 @@ function atualizarTabela(){
       ? `${API_URL}/foto/${encodeURIComponent(reg.concluidoFoto)}`
       : "";
 
-    tr.innerHTML = `
-      <td class="checkbox-cell">
-        <input type="checkbox" data-id="${escapeHtml(reg.id)}" ${checked} />
-      </td>
-      <td>${formatarData(reg.data)}</td>
-      <td>${escapeHtml(reg.equipe || "-")}</td>
-      <td>${escapeHtml(reg.base || "-")}</td>
-      <td>${escapeHtml(reg.regional || "-")}</td>
-      <td>${escapeHtml(reg.componente || "-")}</td>
-      <td>${badge}<span style="margin-left:8px;">${textoServico}</span></td>
-      <td class="endereco">${escapeHtml(reg.endereco || "-")}</td>
-      <td>${escapeHtml(reg.gps || "-")}</td>
-      <td>${escapeHtml(reg.condutor || "-")}</td>
-      <td>${escapeHtml(reg.almaaco || "-")}</td>
-      <td style="font-weight:700; color:${reg.acessocaminhao === 'Sim' ? '#15803d' : '#c2410c'}">
-        ${escapeHtml(reg.acessocaminhao || "-")}
-      </td>
-      <td class="obs">${escapeHtml(reg.observacao || "-")}</td>
-      <td style="text-align:center;">${fotosHtml}</td>
-      <td style="text-align:center;">
-        <div class="os-box">
+    return `
+      <tr class="${trClass}">
+        <td class="checkbox-cell">
+          <input type="checkbox" data-id="${escapeHtml(reg.id)}" ${checked} />
+        </td>
+        <td>${formatarData(reg.data)}</td>
+        <td>${escapeHtml(reg.equipe || "-")}</td>
+        <td>${escapeHtml(reg.base || "-")}</td>
+        <td>${escapeHtml(reg.regional || "-")}</td>
+        <td>${escapeHtml(reg.componente || "-")}</td>
+        <td>${badge}<span style="margin-left:8px;">${textoServico}</span></td>
+        <td class="endereco">${escapeHtml(reg.endereco || "-")}</td>
+        <td>${escapeHtml(reg.gps || "-")}</td>
+        <td>${escapeHtml(reg.condutor || "-")}</td>
+        <td>${escapeHtml(reg.almaaco || "-")}</td>
+        <td style="font-weight:700; color:${reg.acessocaminhao === 'Sim' ? '#15803d' : '#c2410c'}">
+          ${escapeHtml(reg.acessocaminhao || "-")}
+        </td>
+        <td class="obs">${escapeHtml(reg.observacao || "-")}</td>
+        <td style="text-align:center;">${fotosHtml}</td>
+        <td style="text-align:center;">
+          <div class="os-box">
+            ${
+              reg.ssGerada && reg.ssNumero
+                ? `<span class="os-ok">OS Nº ${escapeHtml(reg.ssNumero)}</span>`
+                : `<button type="button" class="btn btn-primary" onclick="gerarSS('${escapeHtml(reg.id)}')">Gerar SS</button>`
+            }
+          </div>
+        </td>
+        <td style="text-align:center;">
           ${
-            reg.ssGerada && reg.ssNumero
-              ? `<span class="os-ok">OS Nº ${escapeHtml(reg.ssNumero)}</span>`
-              : `<button type="button" class="btn btn-primary" onclick="gerarSS('${escapeHtml(reg.id)}')">Gerar SS</button>`
+            reg.concluido
+              ? `
+                <div class="ok-text">✅ Concluído</div>
+                ${reg.concluidoObs ? `<div style="margin-top:6px; font-size:12px; white-space:normal; max-width:240px; color:#334155;">${escapeHtml(reg.concluidoObs)}</div>` : ""}
+                ${conclFotoUrl ? `<div style="margin-top:8px;"><a class="foto-link" href="${conclFotoUrl}" target="_blank"><i class="bi bi-camera"></i> Foto</a></div>` : ""}
+              `
+              : `<button type="button" class="btn btn-success" onclick="concluirRegistro('${escapeHtml(reg.id)}')">Concluir</button>`
           }
-        </div>
-      </td>
-      <td style="text-align:center;">
-        ${
-          reg.concluido
-            ? `
-              <div class="ok-text">✅ Concluído</div>
-              ${reg.concluidoObs ? `<div style="margin-top:6px; font-size:12px; white-space:normal; max-width:240px; color:#334155;">${escapeHtml(reg.concluidoObs)}</div>` : ""}
-              ${conclFotoUrl ? `<div style="margin-top:8px;"><a class="foto-link" href="${conclFotoUrl}" target="_blank"><i class="bi bi-camera"></i> Foto</a></div>` : ""}
-            `
-            : `<button type="button" class="btn btn-success" onclick="concluirRegistro('${escapeHtml(reg.id)}')">Concluir</button>`
-        }
-      </td>
+        </td>
+      </tr>
     `;
+  }).join("");
 
-    const cb = tr.querySelector("input[type='checkbox']");
-    cb.addEventListener("change", (e) => {
-      const id = e.target.getAttribute("data-id");
-      if (!id) return;
+  el.tbody.innerHTML = html;
+  state.lastRenderHash = hash;
 
-      if (e.target.checked) state.selectedIds.add(id);
-      else state.selectedIds.delete(id);
-
-      updateMetrics();
-    });
-
-    frag.appendChild(tr);
-  }
-
-  el.tbody.appendChild(frag);
   updateMetrics();
   requestAnimationFrame(syncHorizontalScroll);
 }
 
-async function fetchPage(cursor){
-  const qs = new URLSearchParams();
+el.tbody.addEventListener("change", (e) => {
+  const cb = e.target.closest("input[type='checkbox'][data-id]");
+  if (!cb) return;
 
+  const id = cb.getAttribute("data-id");
+  if (!id) return;
+
+  if (cb.checked) state.selectedIds.add(id);
+  else state.selectedIds.delete(id);
+
+  updateMetrics();
+});
+
+async function fetchPage(cursor){
+  if (state.requestController) {
+    state.requestController.abort();
+  }
+
+  state.requestController = new AbortController();
+
+  const qs = new URLSearchParams();
   qs.set("limit", String(getLimit()));
   qs.set("status", el.filtroStatus.value || "pendentes");
 
@@ -1141,18 +1161,17 @@ async function fetchPage(cursor){
   if (base) qs.set("base", base);
   if (regional) qs.set("regional", regional);
   if (tipo && tipo !== "todos") qs.set("tipo", tipo);
-
-  if (data){
+  if (data) {
     qs.set("dataInicio", data);
     qs.set("dataFim", data);
   }
-
   if (os) qs.set("os", os);
   if (cursor) qs.set("cursor", cursor);
 
   const resp = await fetch(`${API_URL}/listar?${qs.toString()}`, {
     method: "GET",
-    cache: "no-store"
+    cache: "default",
+    signal: state.requestController.signal,
   });
 
   if (!resp.ok) throw new Error("Falha ao listar");
@@ -1176,8 +1195,10 @@ async function carregarPaginaAtual(){
 
     setStatus(`Carregado com sucesso (${state.itensPagina.length} registro(s)).`, true);
   } catch (err){
+    if (err.name === "AbortError") return;
     console.error(err);
     state.itensPagina = [];
+    state.lastRenderHash = "";
     atualizarTabela();
     setStatus("Erro ao carregar os registros.", false);
   }
@@ -1189,8 +1210,22 @@ async function primeiraPagina(){
   state.nextCursor = null;
   state.cursorHistory = [];
   state.selectedIds.clear();
+  state.lastRenderHash = "";
   await carregarPaginaAtual();
 }
+
+function debounce(fn, wait = 350){
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+
+const aplicarFiltros = debounce(async () => {
+  state.selectedIds.clear();
+  await primeiraPagina();
+}, 300);
 
 function limparFiltrosUI(){
   el.filtroData.value = "";
@@ -1233,13 +1268,12 @@ async function excluirSelecionados(){
 
     alert(`Excluídos: ${out.deleted}`);
     state.selectedIds.clear();
+    state.lastRenderHash = "";
     await carregarPaginaAtual();
   } catch (e){
     console.error(e);
     setStatus("Erro de conexão ao excluir.", false);
     alert("Erro ao conectar com o servidor.");
-  } finally {
-    updateMetrics();
   }
 }
 
@@ -1256,6 +1290,7 @@ window.gerarSS = async function(id){
 
     if (!resp.ok) return alert("Erro ao salvar a OS.");
 
+    state.lastRenderHash = "";
     alert("OS registrada com sucesso!");
     await carregarPaginaAtual();
   } catch (e){
@@ -1289,7 +1324,7 @@ async function confirmarConclusao(){
   if (!state.conclIdAtual) return;
 
   const obs = (el.conclObs.value || "").trim();
-  const file = el.conclFoto.files && el.conclFoto.files[0] ? el.conclFoto.files[0] : null;
+  const file = el.conclFoto.files?.[0] || null;
 
   const confirmou = confirm("Confirmar conclusão deste registro?");
   if (!confirmou) return;
@@ -1316,6 +1351,7 @@ async function confirmarConclusao(){
     }
 
     fecharModalConclusao();
+    state.lastRenderHash = "";
     alert("Registro marcado como concluído!");
     await carregarPaginaAtual();
   } catch (e){
@@ -1328,6 +1364,7 @@ async function confirmarConclusao(){
 function bindEvents(){
   el.btnSalvarToken.addEventListener("click", saveToken);
   el.btnLimparToken.addEventListener("click", clearToken);
+  el.btnExcluirSelecionados.addEventListener("click", excluirSelecionados);
 
   el.btnMostrarToken.addEventListener("click", () => {
     el.adminToken.type = el.adminToken.type === "password" ? "text" : "password";
@@ -1336,12 +1373,11 @@ function bindEvents(){
       : `<i class="bi bi-eye-slash"></i>`;
   });
 
-  el.btnExcluirSelecionados.addEventListener("click", excluirSelecionados);
-
   el.btnAnterior.addEventListener("click", async () => {
     if (state.pageNumber <= 1) return;
     state.currentCursor = state.cursorHistory.pop() ?? null;
     state.pageNumber -= 1;
+    state.lastRenderHash = "";
     await carregarPaginaAtual();
   });
 
@@ -1350,35 +1386,19 @@ function bindEvents(){
     state.cursorHistory.push(state.currentCursor);
     state.currentCursor = state.nextCursor;
     state.pageNumber += 1;
+    state.lastRenderHash = "";
     await carregarPaginaAtual();
   });
 
-  [
-    el.filtroData,
-    el.filtroBase,
-    el.filtroRegional,
-    el.filtroStatus,
-    el.filtroTipo,
-    el.itensPorPagina
-  ].forEach(item => {
-    item.addEventListener("change", async () => {
-      state.selectedIds.clear();
-      await primeiraPagina();
-    });
-  });
+  [el.filtroData, el.filtroBase, el.filtroRegional, el.filtroStatus, el.filtroTipo, el.itensPorPagina]
+    .forEach(item => item.addEventListener("change", aplicarFiltros));
 
-  let osTimer = null;
-  el.filtroOS.addEventListener("input", () => {
-    clearTimeout(osTimer);
-    osTimer = setTimeout(async () => {
-      state.selectedIds.clear();
-      await primeiraPagina();
-    }, 350);
-  });
+  el.filtroOS.addEventListener("input", aplicarFiltros);
 
   el.btnLimparFiltros.addEventListener("click", async () => {
     limparFiltrosUI();
     state.selectedIds.clear();
+    state.lastRenderHash = "";
     await primeiraPagina();
   });
 
@@ -1389,12 +1409,11 @@ function bindEvents(){
   });
 
   el.conclFoto.addEventListener("change", () => {
-    const f = el.conclFoto.files && el.conclFoto.files[0];
+    const f = el.conclFoto.files?.[0];
     el.conclFotoInfo.textContent = f ? `Arquivo selecionado: ${f.name}` : "Nenhum arquivo selecionado.";
   });
 
   el.btnConfirmarConclusao.addEventListener("click", confirmarConclusao);
-
   window.addEventListener("resize", () => requestAnimationFrame(syncHorizontalScroll));
 }
 
